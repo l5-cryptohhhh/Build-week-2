@@ -74,6 +74,14 @@ const MAX_HISTORY = 12;
 */
 const fetchJSON = async (url) => {
   // TODO: implementare con try/catch + await response.json()
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Qualcosa  e andato storto...");
+    const dati = await res.json();
+    return dati;
+  } catch (errore) {
+    console.error(errore);
+  }
   // - Se response.ok è false, lancia un Error
   // - Se la chiamata fallisce per rete, ritorna oggetto vuoto e logga l'errore
   return { results: [], resultCount: 0 };
@@ -125,6 +133,16 @@ const debounce = (fn, ms) => {
 */
 class Track {
   constructor(raw) {
+    this.id = raw.trackId;
+    this.title = raw.trackName;
+    this.artist = raw.artistName;
+    this.album = raw.collectionName;
+    this.albumId = raw.collectionId;
+    this.artistId = raw.artistId;
+    this.cover = raw.artworkUrl100;
+    this.previewUrl = raw.previewUrl;
+    this.durationMs = raw.trackTimeMillis;
+
     // TODO: assegna alle property di this i valori da raw
     // (id, title, artist, album, albumId, artistId, cover, previewUrl, durationMs)
   }
@@ -138,6 +156,13 @@ class Track {
 */
 class Album {
   constructor(raw) {
+    this.id = raw.collectionId;
+    this.title = raw.collectionName;
+    this.artist = raw.artistName;
+    this.cover = raw.artworkUrl100;
+    this.releaseDate = raw.releaseDate;
+    this.trackCount = raw.trackCount;
+
     // TODO: come sopra
   }
 }
@@ -149,6 +174,9 @@ class Album {
 */
 class Artist {
   constructor(raw) {
+    this.id = raw.artistId;
+    this.name = raw.artistName;
+    this.genre = raw.primaryGenreName;
     // TODO: come sopra
   }
 }
@@ -256,28 +284,44 @@ class Player {
   isFavourite(trackId) -> bool
   toggleFavourite(track) -> aggiunge o rimuove
 */
-
 const getHistory = () => {
-  // TODO: leggi STORAGE_KEY_HISTORY, JSON.parse, ritorna array (vuoto se assente)
-  return [];
+  const cronologia = localStorage.getItem(STORAGE_KEY_HISTORY);
+  return JSON.parse(cronologia) || [];
 };
 
 const addToHistory = (track) => {
+  const history = getHistory();
+
+  const noCopy = history.filter((t) => t.id !== track.id);
+
+  const newArray = [track, ...noCopy];
+
+  const tagliato = newArray.slice(0, MAX_HISTORY);
+  localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(tagliato));
+
   // TODO: array = getHistory(); rimuovi eventuale duplicato (per id);
   //       metti track in testa; tronca a MAX_HISTORY; salva
 };
 
 const getFavourites = () => {
+  const preferiti = localStorage.getItem(STORAGE_KEY_FAVOURITES);
+  return JSON.parse(preferiti) || [];
   // TODO: come getHistory ma con STORAGE_KEY_FAVOURITES
-  return [];
 };
 
 const isFavourite = (trackId) => {
   // TODO: return getFavourites().some(t => t.id === trackId)
-  return false;
+  return getFavourites().some((t) => t.id === trackId);
 };
 
 const toggleFavourite = (track) => {
+  const array = getFavourites();
+  let nuovoArray;
+  if (isFavourite(track.id)) {
+    nuovoArray = array.filter((t) => t.id !== track.id);
+  } else nuovoArray = [track, ...array];
+
+  localStorage.setItem(STORAGE_KEY_FAVOURITES, JSON.stringify(nuovoArray));
   // TODO: se presente per id -> rimuovi; altrimenti aggiungi in testa; salva
 };
 
@@ -296,7 +340,7 @@ const renderSidebar = (activePage) => {
       <span class="brand-text">EpiTunes</span>
     </div>
     <nav class="sidebar-nav">
-      <a href="index.html"  data-page="home"   ${activePage === "home"   ? 'class="active"' : ""}><span class="ico">🏠</span><span>Home</span></a>
+      <a href="index.html"  data-page="home"   ${activePage === "home" ? 'class="active"' : ""}><span class="ico">🏠</span><span>Home</span></a>
       <a href="search.html" data-page="search" ${activePage === "search" ? 'class="active"' : ""}><span class="ico">🔍</span><span>Cerca</span></a>
     </nav>
     <p class="sidebar-section-title">I tuoi preferiti</p>
