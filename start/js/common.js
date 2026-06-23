@@ -348,16 +348,14 @@ volumeBar.addEventListener("click", (e) => {
   }
 
   setVolume(v) {
-    setVolume(v) {
-  const vol = Math.min(1, Math.max(0, v));
-  this.audio.volume = vol;
-  if (this.elVolumeFill) this.elVolumeFill.style.width = `${vol * 100}%`;
-}
-    // TODO: this.audio.volume = v; aggiorna #volume-fill style.width
+    const vol = Math.min(1, Math.max(0, v));
+    this.audio.volume = vol;
+    if (this.elVolumeFill) this.elVolumeFill.style.width = `${vol * 100}%`;
   }
 
   seek(percent) {
-    // TODO: this.audio.currentTime = this.audio.duration * percent
+    if (!this.audio.duration) return;
+    this.audio.currentTime = this.audio.duration * Math.min(1, Math.max(0, percent));
   }
 }
 
