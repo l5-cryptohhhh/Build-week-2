@@ -203,6 +203,7 @@ class Artist {
     - "ended" per fermarsi a fine brano
 */
 class Player {
+  //Da fare
   constructor() {
     this.audio = document.querySelector("#audio-element");
     this.currentTrack = null;
@@ -248,11 +249,12 @@ class Player {
       </div>
     `;
 
-    // TODO: aggancia eventi click su #btn-toggle, click su #progress-bar (seek),
+    // TODO: aggancia eventi click su #btn-toggle, click su #progress-bar (seek),   //da fare
     //       click su #volume-bar (setVolume), volume iniziale (this.audio.volume = 0.8).
   }
 
   play(track) {
+    //Da fare
     // TODO:
     // 1) salva track in this.currentTrack
     // 2) this.audio.src = track.previewUrl
@@ -346,7 +348,7 @@ const renderSidebar = (activePage) => {
     <p class="sidebar-section-title">I tuoi preferiti</p>
     <ul class="sidebar-list" id="sidebar-favs"></ul>
   `;
-  // TODO (opzionale): popola #sidebar-favs con i titoli dei preferitii
+  // TODO (opzionale): popola #sidebar-favs con i titoli dei preferiti   // Da fare
 };
 
 /* ============================ 7. Inizializzazione ============================ */
