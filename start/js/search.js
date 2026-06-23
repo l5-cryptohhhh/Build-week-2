@@ -23,21 +23,172 @@
 
 const player = initPage("search");
 
-const input        = document.querySelector("#search-input");
-const rowTracks    = document.querySelector("#row-tracks");
-const rowAlbums    = document.querySelector("#row-albums");
-const rowArtists   = document.querySelector("#row-artists");
-const gridTracks   = document.querySelector("#grid-tracks");
-const gridAlbums   = document.querySelector("#grid-albums");
-const gridArtists  = document.querySelector("#grid-artists");
+const input = document.querySelector("#search-input");
+const rowTracks = document.querySelector("#row-tracks");
+const rowAlbums = document.querySelector("#row-albums");
+const rowArtists = document.querySelector("#row-artists");
+const gridTracks = document.querySelector("#grid-tracks");
+const gridAlbums = document.querySelector("#grid-albums");
+const gridArtists = document.querySelector("#grid-artists");
 
-const renderTrackCard  = (track)  => { /* TODO */ };
-const renderAlbumCard  = (album)  => { /* TODO */ };
-const renderArtistCard = (artist) => { /* TODO */ };
+// Si aspetta un'istanza di Track con: id, title, artist, cover, previewUrl (contratto definito in common.js)
+const renderTrackCard = (track) => {
+  const cardDiv = document.createElement("div");
+  cardDiv.classList.add("card");
+
+  const imageWrap = document.createElement("div");
+  imageWrap.classList.add("card-image-wrap");
+  const img = document.createElement("img");
+  img.src = track.cover;
+  img.alt = "Cover di " + track.title;
+
+  imageWrap.appendChild(img);
+
+  const cardTitle = document.createElement("p");
+  cardTitle.classList.add("card-title");
+  cardTitle.textContent = track.title;
+
+  const cardSub = document.createElement("p");
+  cardSub.classList.add("card-sub");
+  cardSub.textContent = track.artist;
+
+  const cardPlay = document.createElement("button");
+  cardPlay.textContent = "▶";
+  cardPlay.classList.add("card-play");
+
+  // Click su tutta la card (non solo sul bottone ▶) per riprodurre il brano:
+  // cardPlay non ha un suo listener separato, l'evento sale (bubbling) da lui a cardDiv.
+  cardDiv.addEventListener("click", (e) => {
+    e.preventDefault();
+    player.play(track);
+  });
+
+  cardDiv.appendChild(imageWrap);
+
+  cardDiv.appendChild(cardTitle);
+  cardDiv.appendChild(cardSub);
+  cardDiv.appendChild(cardPlay);
+
+  return cardDiv;
+};
+
+// Si aspetta un'istanza di Album con: id, title, artist, cover (contratto definito in common.js)
+// Niente bottone play: un album si apre, non si riproduce direttamente.
+const renderAlbumCard = (album) => {
+  const cardDiv = document.createElement("div");
+  cardDiv.classList.add("card");
+
+  const imageWrap = document.createElement("div");
+  imageWrap.classList.add("card-image-wrap");
+  const img = document.createElement("img");
+  img.src = album.cover;
+  img.alt = "Cover di " + album.title;
+
+  imageWrap.appendChild(img);
+
+  const cardTitle = document.createElement("p");
+  cardTitle.classList.add("card-title");
+  cardTitle.textContent = album.title;
+
+  const cardSub = document.createElement("p");
+  cardSub.classList.add("card-sub");
+  cardSub.textContent = album.artist;
+
+  // Click sulla card -> naviga alla pagina di dettaglio album (passa l'id via query string)
+  cardDiv.addEventListener("click", (e) => {
+    e.preventDefault();
+    window.location.href = "album.html?id=" + album.id;
+  });
+
+  cardDiv.appendChild(imageWrap);
+
+  cardDiv.appendChild(cardTitle);
+  cardDiv.appendChild(cardSub);
+
+  return cardDiv;
+};
+// Si aspetta un'istanza di Artist con: id, title, genre (contratto definito in common.js)
+// Niente bottone play e niente <img>: l'API iTunes per entity=musicArtist non fornisce
+// un artworkUrl, quindi card-image-wrap resta vuoto (cerchio nero "round") solo per
+// mantenere la stessa altezza delle card di brani/album nella griglia.
+const renderArtistCard = (artist) => {
+  const cardDiv = document.createElement("div");
+  cardDiv.classList.add("card");
+
+  const imageWrap = document.createElement("div");
+  imageWrap.classList.add("card-image-wrap", "round");
+
+  const cardTitle = document.createElement("p");
+  cardTitle.classList.add("card-title");
+  cardTitle.textContent = artist.title;
+
+  const cardSub = document.createElement("p");
+  cardSub.classList.add("card-sub");
+  cardSub.textContent = artist.genre;
+
+  // Click sulla card -> naviga alla pagina di dettaglio artista (passa l'id via query string)
+  cardDiv.addEventListener("click", (e) => {
+    e.preventDefault();
+    window.location.href = "artist.html?id=" + artist.id;
+  });
+
+  cardDiv.appendChild(imageWrap);
+
+  cardDiv.appendChild(cardTitle);
+  cardDiv.appendChild(cardSub);
+
+  return cardDiv;
+};
 
 const doSearch = async (term) => {
-  // TODO: implementare come da elenco sopra (Promise.all)
+  if (term === "") {
+    rowTracks.hidden = true;
+    rowAlbums.hidden = true;
+    rowArtists.hidden = true;
+
+    gridTracks.innerHTML = "";
+    gridAlbums.innerHTML = "";
+    gridArtists.innerHTML = "";
+  } else {
+    const urlTracks =
+      API_BASE +
+      "/search?term=" +
+      encodeURIComponent(term) +
+      "&entity=song&limit=12";
+
+    const urlAlbums =
+      API_BASE +
+      "/search?term=" +
+      encodeURIComponent(term) +
+      "&entity=album&limit=8";
+
+    const urlArtists =
+      API_BASE +
+      "/search?term=" +
+      encodeURIComponent(term) +
+      "&entity=musicArtist&limit=8";
+
+    const [dataTracks, dataAlbums, dataArtists] = await Promise.all([
+      fetchJSON(urlTracks),
+      fetchJSON(urlAlbums),
+      fetchJSON(urlArtists),
+    ]);
+    
+    dataTracks.results.forEach(track => {
+      const trackFatta = {
+         id: track.id,
+         title: track.title,
+         artist: track.artist,
+         cover: track.cover,
+         previewUrl: track.url
+      }
+
+      
+    });
+  }
 };
+
+doSearch();
 
 const debouncedSearch = debounce(doSearch, 400);
 
