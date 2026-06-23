@@ -65,7 +65,7 @@ const loadAlbum = async () => {
 
   const sub = document.createElement("p");
   sub.classList.add("hero-sub");
-  sub.textContent = `${album.artist} ${new Date(album.releaseDate).getFullYear()} . ${album.trackCount} brani`;
+  sub.textContent = `${album.artist} · ${new Date(album.releaseDate).getFullYear()} · ${album.trackCount} brani`;
 
   meta.appendChild(kicker);
   meta.appendChild(title);
@@ -100,6 +100,7 @@ const loadAlbum = async () => {
   tracks.forEach((track, index) => {
     const row = document.createElement("div");
     row.classList.add("track-row");
+    row.dataset.trackId = track.id;
 
     const num = document.createElement("span");
     num.classList.add("track-num");
