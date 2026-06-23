@@ -71,6 +71,29 @@ const loadAlbum = async () => {
   meta.appendChild(title);
   meta.appendChild(sub);
 
+  //bottone play
+
+  const action = document.createElement("div");
+  action.classList.add("hero-actions");
+
+  const btnPlay = document.createElement("button");
+  btnPlay.classList.add("btn-play-big");
+  btnPlay.textContent = "▶";
+
+  btnPlay.addEventListener("click", () => player.play(tracks[0]));
+
+  //bottone cuore
+
+  const btnFav = document.createElement("button");
+  btnFav.classList.add("btn-fav-big");
+  btnFav.textContent = "♥";
+
+  btnFav.addEventListener("click", () => toggleFavourite(tracks[0]));
+
+  action.appendChild(btnPlay);
+  action.appendChild(btnFav);
+  meta.appendChild(action);
+
   albumHero.appendChild(cover);
   albumHero.appendChild(meta);
 
@@ -93,10 +116,19 @@ const loadAlbum = async () => {
     row.appendChild(num);
     row.appendChild(titleEl);
     row.appendChild(time);
+
+    const btnRowFav = document.createElement("button");
+    btnRowFav.classList.add("track-fav");
+    btnRowFav.textContent = "♥";
+    btnRowFav.addEventListener("click", (e) => {
+      e.stopPropagation();
+      toggleFavourite(track);
+    });
+    row.appendChild(btnRowFav);
+
     tracklist.appendChild(row);
 
     row.addEventListener("click", () => player.play(track));
   });
 };
-
 loadAlbum();
