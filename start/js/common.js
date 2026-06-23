@@ -299,26 +299,60 @@ volumeBar.addEventListener("click", (e) => {
     this.audio.volume = 0.8;
   }
 
-    // TODO: salva i riferimenti agli elementi del footer (.player-cover, .player-title, ...)
-    // TODO: aggancia eventi audio (timeupdate, ended)
+  async play(track) {
+  if (!track || !track.previewUrl) return; // niente brano o niente preview -> esci
+
+  // 1) salva brano corrente
+  this.currentTrack = track;
+
+  // 2) sorgente audio = preview del brano
+  this.audio.src = track.previewUrl;
+
+  // 3) avvia (play() ritorna una Promise: gestisci con try/catch)
+  try {
+    await this.audio.play();
+    this.isPlaying = true;
+  } catch (errore) {
+    console.error("Impossibile riprodurre il brano:", errore);
+    this.isPlaying = false;
   }
 
-  play(track) {
-    //Da fare
-    // TODO:
-    // 1) salva track in this.currentTrack
-    // 2) this.audio.src = track.previewUrl
-    // 3) this.audio.play()
-    // 4) aggiorna UI (cover, titolo, artista, durata totale, icona play -> "⏸")
-    // 5) chiama addToHistory(track)
-    // 6) marca .track-row.is-playing se siamo nella tracklist
+  // 4) aggiorna UI footer
+  if (this.elCoverImg) this.elCoverImg.src = track.cover;
+  if (this.elTitle) this.elTitle.textContent = track.title;
+  if (this.elArtist) this.elArtist.textContent = track.artist;
+  if (this.elTimeTotal) this.elTimeTotal.textContent = formatTime(track.durationMs);
+  if (this.elBtnToggle) this.elBtnToggle.textContent = this.isPlaying ? "⏸" : "▶";
+
+  // 5) salva in cronologia
+  addToHistory(track);
+
+  // 6) marca la riga in riproduzione (se siamo in una tracklist)
+  document.querySelectorAll(".track-row.is-playing").forEach((row) => row.classList.remove("is-playing"));
+  const row = document.querySelector(`.track-row[data-track-id="${track.id}"]`);
+  if (row) row.classList.add("is-playing");
   }
 
   togglePlay() {
+    if (!this.currentTrack) return;
+
+    if (this.audio.paused) {
+      this.audio.play().catch(err => console.warn("Riproduzione bloccata:", err));
+      this.isPlaying = true;
+    } else {
+      this.audio.pause();
+      this.isPlaying = false;
+    }
+    if (this.elBtnToggle) this.elBtnToggle.textContent = this.isPlaying ? "⏸" : "▶";
     // TODO: alterna play/pause + aggiorna icona del button
   }
 
   setVolume(v) {
+    setVolume(v) {
+  const vol = Math.min(1, Math.max(0, v));
+  this.audio.volume = vol;
+  if (this.elVolumeFill) this.elVolumeFill.style.width = `${vol * 100}%`;
+}
     // TODO: this.audio.volume = v; aggiorna #volume-fill style.width
   }
 
