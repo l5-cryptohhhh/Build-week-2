@@ -27,6 +27,44 @@ const home = document.querySelector(".home");
 */
 const renderRow = (rowTitle, tracks) => {
   // TODO
+  const section = document.createElement("section");
+  section.classList.add("row");
+
+  const h2 = document.createElement("h2");
+  h2.textContent = rowTitle;
+  const div = document.createElement("div");
+  div.classList.add("grid");
+
+  tracks.forEach((track) => {
+    const card = document.createElement("div");
+    card.classList.add("card");
+
+    const imgWrap = document.createElement("div");
+    imgWrap.classList.add("card-image-wrap");
+    const img = document.createElement("img");
+    img.src = track.cover;
+    img.alt = track.title;
+    imgWrap.appendChild(img);
+
+    const pTitle = document.createElement("p");
+    pTitle.classList.add("card-title");
+    pTitle.textContent = track.title;
+
+    const pArtist = document.createElement("p");
+    pArtist.classList.add("card-sub");
+    pArtist.textContent = track.artist;
+
+    card.appendChild(imgWrap);
+    card.appendChild(pTitle);
+    card.appendChild(pArtist);
+
+    div.appendChild(card);
+  });
+
+  section.appendChild(h2);
+  section.appendChild(div);
+
+  home.appendChild(section);
 };
 
 /*
@@ -36,6 +74,24 @@ const renderRow = (rowTitle, tracks) => {
 */
 const loadHome = async () => {
   // TODO
+  const [pop, rock, hits] = await Promise.all([
+    fetchJSON(`${API_BASE}/search?term=pop&entity=song&limit=12`),
+    fetchJSON(`${API_BASE}/search?term=rock&entity=song&limit=12`),
+    fetchJSON(`${API_BASE}/search?term=hits&entity=song&limit=12`),
+  ]);
+  const traccePop = pop.results.map((raw) => new Track(raw));
+  const tracceRock = rock.results.map((raw) => new Track(raw));
+  const tracceHits = hits.results.map((raw) => new Track(raw));
+
+  const history = getHistory();
+  const favourites = getFavourites();
+
+  renderRow("Suggerimenti pop", traccePop);
+  renderRow("Suggerimenti rock", tracceRock);
+  renderRow("Suggerimenti hits", tracceHits);
+
+  if (history.length > 0) renderRow("Riprodotti di recente", history);
+  if (favourites.length > 0) renderRow("I tuoi preferiti", favourites);
 };
 
 loadHome();
