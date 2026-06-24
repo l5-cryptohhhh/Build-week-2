@@ -107,7 +107,7 @@ const renderAlbumCard = (album) => {
 
   return cardDiv;
 };
-// Si aspetta un'istanza di Artist con: id, title, genre (contratto definito in common.js)
+// Si aspetta un'istanza di Artist con: id, name, genre (contratto definito in common.js)
 // Niente bottone play e niente <img>: l'API iTunes per entity=musicArtist non fornisce
 // un artworkUrl, quindi card-image-wrap resta vuoto (cerchio nero "round") solo per
 // mantenere la stessa altezza delle card di brani/album nella griglia.
@@ -120,7 +120,7 @@ const renderArtistCard = (artist) => {
 
   const cardTitle = document.createElement("p");
   cardTitle.classList.add("card-title");
-  cardTitle.textContent = artist.title;
+  cardTitle.textContent = artist.name;
 
   const cardSub = document.createElement("p");
   cardSub.classList.add("card-sub");
@@ -173,22 +173,56 @@ const doSearch = async (term) => {
       fetchJSON(urlAlbums),
       fetchJSON(urlArtists),
     ]);
-    
-    dataTracks.results.forEach(track => {
-      const trackFatta = {
-         id: track.id,
-         title: track.title,
-         artist: track.artist,
-         cover: track.cover,
-         previewUrl: track.url
-      }
 
-      
+    const newTrack = dataTracks.results.map((raw) => {
+      return new Track(raw);
     });
+
+    const newAlbum = dataAlbums.results.map((raw) => {
+      return new Album(raw);
+    });
+
+    const newArtist = dataArtists.results.map((raw) => {
+      return new Artist(raw);
+    });
+
+    gridTracks.innerHTML = "";
+    gridAlbums.innerHTML = "";
+    gridArtists.innerHTML = "";
+
+    newTrack.forEach((track) => {
+      gridTracks.appendChild(renderTrackCard(track));
+    });
+
+    newAlbum.forEach((album) => {
+      gridAlbums.appendChild(renderAlbumCard(album));
+    });
+
+    newArtist.forEach((artist) => {
+      gridArtists.appendChild(renderArtistCard(artist));
+    });
+
+    if (newTrack.length === 0) {
+      rowTracks.hidden = true;
+    } else {
+      rowTracks.hidden = false;
+    }
+
+    if (newAlbum.length === 0) {
+      rowAlbums.hidden = true;
+    } else {
+      rowAlbums.hidden = false;
+    }
+
+    if (newArtist.length === 0) {
+      rowArtists.hidden = true;
+    } else {
+      rowArtists.hidden = false;
+    }
+
+    localStorage.setItem(STORAGE_KEY_LAST_SEARCH, term);
   }
 };
-
-doSearch();
 
 const debouncedSearch = debounce(doSearch, 400);
 
@@ -197,3 +231,8 @@ input.addEventListener("input", (event) => {
 });
 
 // TODO: al caricamento, recupera l'ultima query da localStorage e lancia doSearch(lastQuery)
+if (localStorage.getItem(STORAGE_KEY_LAST_SEARCH) !== null) {
+  const lastSearch = localStorage.getItem(STORAGE_KEY_LAST_SEARCH);
+  input.value = lastSearch;
+  doSearch(lastSearch);
+}
