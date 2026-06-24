@@ -458,9 +458,32 @@ const renderSidebarFavs = () => {
 
   favs.forEach((track) => {
     const li = document.createElement("li");
-    li.textContent = track.title || "—";
-    li.title = `${track.title} — ${track.artist}`;
     li.style.cursor = "pointer";
+    li.style.display = "flex";         // Allinea immagine e testo sulla stessa riga
+    li.style.alignItems = "center";     // Centra verticalmente l'immagine rispetto al testo
+    li.style.gap = "8px";               // Spazio tra l'immagine e il testo
+    li.style.marginBottom = "8px";      // Spazio tra un brano e l'altro
+    li.title = `${track.title || "Brano"} — ${track.artist || "Artista"}`;
+
+    const img = document.createElement("img");
+    img.src = track.cover || "https://placehold.co/30x30?text=🎵"; // placeholder se non c'è immagine dispo
+    img.alt = track.album || "Album";
+    img.style.width = "30px";          
+    img.style.height = "30px";
+    img.style.borderRadius = "4px";     
+    img.style.objectFit = "cover";
+
+   /* evita che il testo vada a capo, taglia il testo se troppo lungo e aggiunge i puntini di sospensione */
+
+    const textSpan = document.createElement("span");
+    textSpan.textContent = track.title || "—";
+    textSpan.style.whiteSpace = "nowrap";   
+    textSpan.style.overflow = "hidden";      
+    textSpan.style.textOverflow = "ellipsis";
+
+    li.appendChild(img);
+    li.appendChild(textSpan);
+
     li.addEventListener("click", () => {
       if (window.player) window.player.play(track);
     });
