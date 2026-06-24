@@ -383,6 +383,9 @@ const addToHistory = (track) => {
   const tagliato = newArray.slice(0, MAX_HISTORY);
   localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(tagliato));
 
+  // avvisa la pagina che la libreria è cambiata (la home si ridisegna)
+  document.dispatchEvent(new CustomEvent("library:changed"));
+
   // TODO: array = getHistory(); rimuovi eventuale duplicato (per id);
   //       metti track in testa; tronca a MAX_HISTORY; salva
 };
@@ -406,7 +409,11 @@ const toggleFavourite = (track) => {
   } else nuovoArray = [track, ...array];
 
   localStorage.setItem(STORAGE_KEY_FAVOURITES, JSON.stringify(nuovoArray));
-  // TODO: se presente per id -> rimuovi; altrimenti aggiungi in testa; salva
+
+  // aggiorna subito la sidebar, senza ricaricare la pagina
+  renderSidebarFavs();
+  // avvisa la pagina che la libreria è cambiata (la home si ridisegna)
+  document.dispatchEvent(new CustomEvent("library:changed"));
 };
 
 /* ============================ 6. Render sidebar ============================ */
@@ -415,6 +422,37 @@ const toggleFavourite = (track) => {
   renderSidebar(activePage)
   - activePage: "home" | "search" | "library" (per evidenziare il link attivo)
 */
+/*
+  renderSidebarFavs()
+  - Ridisegna SOLO la lista #sidebar-favs (senza ricaricare tutta la sidebar)
+  - Si chiama ogni volta che si aggiunge/rimuove un preferito
+*/
+const renderSidebarFavs = () => {
+  const favsList = document.querySelector("#sidebar-favs");
+  if (!favsList) return;
+  favsList.replaceChildren(); // svuota la lista senza innerHTML
+
+  const favs = getFavourites();
+  if (favs.length === 0) {
+    const li = document.createElement("li");
+    li.textContent = "Nessun preferito";
+    li.style.fontStyle = "italic";
+    favsList.appendChild(li);
+    return;
+  }
+
+  favs.forEach((track) => {
+    const li = document.createElement("li");
+    li.textContent = track.title || "—";
+    li.title = `${track.title} — ${track.artist}`;
+    li.style.cursor = "pointer";
+    li.addEventListener("click", () => {
+      if (window.player) window.player.play(track);
+    });
+    favsList.appendChild(li);
+  });
+};
+
 const renderSidebar = (activePage) => {
   const sidebar = document.querySelector(".sidebar");
   if (!sidebar) return;
@@ -430,27 +468,7 @@ const renderSidebar = (activePage) => {
     <p class="sidebar-section-title">I tuoi preferiti</p>
     <ul class="sidebar-list" id="sidebar-favs"></ul>
   `;
-  const favsList = sidebar.querySelector("#sidebar-favs");
-  if (favsList) {
-    const favs = getFavourites();
-    if (favs.length === 0) {
-      const li = document.createElement("li");
-      li.textContent = "Nessun preferito";
-      li.style.fontStyle = "italic";
-      favsList.appendChild(li);
-    } else {
-      favs.forEach(track => {
-        const li = document.createElement("li");
-        li.textContent = track.title || "—";
-        li.title = `${track.title} — ${track.artist}`;
-        li.style.cursor = "pointer";
-        li.addEventListener("click", () => {
-          if (window.player) window.player.play(track);
-        });
-        favsList.appendChild(li);
-      });
-    }
-  }
+  renderSidebarFavs();
 };
 
 /* ============================ 7. Inizializzazione ============================ */

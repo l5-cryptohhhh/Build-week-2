@@ -291,7 +291,11 @@ button {
   opacity: 0;
   transform: translateY(8px);
   transition: opacity 0.2s, transform 0.2s;
+   padding: 0;
+  line-height: 1;
+  padding-left: 2px;
 }
+
 .card:hover .card-play {
   opacity: 1;
   transform: translateY(0);
@@ -537,6 +541,10 @@ button {
   color: #000;
   border: none;
   font-size: 14px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  padding-left: 2px; /* offset ottico del ▶ */
 }
 
 .player-progress {
