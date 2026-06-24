@@ -259,11 +259,11 @@ class Player {
 
       <div class="player-center">
         <div class="player-controls">
-          <button class="btn-ctrl" id="btn-shuffle" aria-label="Shuffle">⇄</button>
+          <button class="btn-ctrl" id="btn-shuffle" aria-label="Shuffle"><i class="bi bi-shuffle"></i></button>
           <button class="btn-ctrl" id="btn-prev"    aria-label="Precedente">⏮</button>
           <button class="btn-play" id="btn-toggle"  aria-label="Play/Pausa">▶</button>
           <button class="btn-ctrl" id="btn-next"    aria-label="Successivo">⏭</button>
-          <button class="btn-ctrl" id="btn-repeat"  aria-label="Ripeti">↻</button>
+          <button class="btn-ctrl" id="btn-repeat"  aria-label="Ripeti"><i class="bi bi-repeat"></i></button>
         </div>
         <div class="player-progress">
           <span id="time-current">0:00</span>

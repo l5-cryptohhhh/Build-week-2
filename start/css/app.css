@@ -590,7 +590,7 @@ button {
   color: var(--text-primary);
 }
 .btn-ctrl.btn-active {
-  color: #1db954;
+  color: #FD7803;
 }
 .btn-play {
   width: 36px;
