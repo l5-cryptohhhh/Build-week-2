@@ -498,5 +498,10 @@ const initPage = (activePage) => {
   const player = new Player();
   player.mount();
   window.player = player;
+
+  const [btnBack, btnForward] = document.querySelectorAll(".nav-btn");
+  if (btnBack) btnBack.addEventListener("click", () => history.back());
+  if (btnForward) btnForward.addEventListener("click", () => history.forward());
+
   return player;
 };
