@@ -567,8 +567,8 @@ const renderSidebar = (activePage) => {
   if (!sidebar) return;
   sidebar.innerHTML = `
     <div class="brand">
-      <div class="brand-mark">E</div>
-      <span class="brand-text">EpiTunes</span>
+      <img src="assets/Nuovo_Logo.png" alt="EpiTunes Logo" class="brand-logo" />
+      <span class="brand-text">usiCode</span>
     </div>
     <nav class="sidebar-nav">
       <a href="index.html"  data-page="home"   ${activePage === "home" ? 'class="active"' : ""}><span class="ico">🏠</span><span>Home</span></a>
