@@ -361,6 +361,12 @@ class Player {
       `.track-row[data-track-id="${track.id}"]`,
     );
     if (row) row.classList.add("is-playing");
+
+    document
+      .querySelectorAll(".card.is-playing")
+      .forEach((c) => c.classList.remove("is-playing"));
+    document.querySelectorAll(`.card[data-track-id="${track.id}"]`)
+      .forEach(c => c.classList.add("is-playing"));
   }
 
   togglePlay() {

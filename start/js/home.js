@@ -28,6 +28,7 @@ const home = document.querySelector(".home");
 const makeCard = (track, index, tracks) => {
   const card = document.createElement("div");
   card.classList.add("card");
+  card.dataset.trackId = track.id;
 
   const imgWrap = document.createElement("div");
   imgWrap.classList.add("card-image-wrap");

@@ -286,6 +286,10 @@ button {
 .card:hover {
   background: var(--bg-elev-hover);
 }
+.card.is-playing {
+  background: var(--bg-elev-hover);
+  outline: 2px solid var(--accent);
+}
 .card-image-wrap {
   position: relative;
   width: 100%;
