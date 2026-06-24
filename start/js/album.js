@@ -86,9 +86,16 @@ const loadAlbum = async () => {
 
   const btnFav = document.createElement("button");
   btnFav.classList.add("btn-fav-big");
-  btnFav.textContent = "♥";
+  const favHeroInit = isFavourite(tracks[0].id);
+  btnFav.textContent = favHeroInit ? "♥" : "♡";
+  btnFav.classList.toggle("is-fav", favHeroInit);
 
-  btnFav.addEventListener("click", () => toggleFavourite(tracks[0]));
+  btnFav.addEventListener("click", () => {
+    toggleFavourite(tracks[0]);
+    const fav = isFavourite(tracks[0].id);
+    btnFav.textContent = fav ? "♥" : "♡";
+    btnFav.classList.toggle("is-fav", fav);
+  });
 
   action.appendChild(btnPlay);
   action.appendChild(btnFav);
@@ -120,10 +127,17 @@ const loadAlbum = async () => {
 
     const btnRowFav = document.createElement("button");
     btnRowFav.classList.add("track-fav");
-    btnRowFav.textContent = "♥";
+    // stato iniziale: pieno+rosso se già nei preferiti, vuoto altrimenti
+    const favRowInit = isFavourite(track.id);
+    btnRowFav.textContent = favRowInit ? "♥" : "♡";
+    btnRowFav.classList.toggle("is-fav", favRowInit);
+
     btnRowFav.addEventListener("click", (e) => {
       e.stopPropagation();
       toggleFavourite(track);
+      const fav = isFavourite(track.id);
+      btnRowFav.textContent = fav ? "♥" : "♡";
+      btnRowFav.classList.toggle("is-fav", fav);
     });
     row.appendChild(btnRowFav);
 

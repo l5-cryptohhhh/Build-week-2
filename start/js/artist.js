@@ -58,6 +58,8 @@ const loadArtist = async () => {
     // results[0] è l'artista, i successivi sono i brani
     const artist = results[0];
     const tracks = results.slice(1);
+    // converti i dati raw in istanze Track (servono .id, .title, .cover, .previewUrl)
+    const trackObjs = tracks.map((raw) => new Track(raw));
 
     /* Costruisci #artist-hero passo 5 */
     artistHero.textContent = ""; // Svuota il contenitore in modo sicuro
@@ -105,7 +107,7 @@ const loadArtist = async () => {
       btnPlayBig.textContent = "▶";
       
       btnPlayBig.addEventListener("click", () => {
-        player.play(tracks[0]);
+        player.play(trackObjs[0]);
       });
 
       heroActions.appendChild(btnPlayBig);
@@ -145,19 +147,22 @@ const loadArtist = async () => {
       }
 
       // Bottone cuoricino preferiti
+      const trackModel = trackObjs[index];
+
       const btnFav = document.createElement("button");
       btnFav.classList.add("track-fav");
-      btnFav.textContent = "♡";
+      // stato iniziale letto dal localStorage
+      const favInit = isFavourite(trackModel.id);
+      btnFav.textContent = favInit ? "♥" : "♡";
+      btnFav.classList.toggle("is-fav", favInit);
+
       btnFav.addEventListener("click", (e) => {
         e.stopPropagation(); // Evita che cliccando il cuore parta la canzone
-        btnFav.classList.toggle("is-fav"); // .is-fav cambia il colore in rosso
-        btnFav.textContent = btnFav.classList.contains("is-fav") ? "♥" : "♡";
-        
-     //Chiama la funzione richiesta dalle specifiche
-      if (typeof toggleFavourite === "function") {
-         toggleFavourite(track);
-      }
-    });
+        toggleFavourite(trackModel);
+        const fav = isFavourite(trackModel.id);
+        btnFav.classList.toggle("is-fav", fav); // .is-fav cambia il colore in rosso
+        btnFav.textContent = fav ? "♥" : "♡";
+      });
 
       trackRow.appendChild(trackNum);
       trackRow.appendChild(trackTitle);
@@ -169,8 +174,8 @@ const loadArtist = async () => {
        
         document.querySelectorAll(".track-row").forEach(row => row.classList.remove("is-playing"));
         trackRow.classList.add("is-playing");
-        
-        player.play(track);
+
+        player.play(trackModel);
       });
 
       topTracks.appendChild(trackRow);
