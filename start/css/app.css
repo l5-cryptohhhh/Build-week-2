@@ -203,6 +203,11 @@ button {
   font-size: 13px;
 }
 
+.no-logged {
+  display: flex;
+  gap: 8px;
+}
+
 .user-pill:last-child {
   background-color: #f7d800;
   color: black;
@@ -218,15 +223,40 @@ button {
 }
 
 .logged-user {
-  display: none;
+  position: relative;
 }
 
 .user-dropdown {
+  position: absolute;
+  width: 100%;
+  right: 0;
+  top: 100%;
+  padding: 0;
   list-style: none;
-  padding: 0 8px;
   background-color: #d6ba00;
   color: #000;
   font-size: 13px;
+  border-radius: 0 0 16px 16px;
+  overflow: hidden;
+  transform-origin: top center;
+  transform: scaleY(0);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.18s ease, opacity 0.18s ease;
+}
+
+.user-dropdown.open {
+  transform: scaleY(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.user-dropdown li {
+  padding: 8px 14px;
+}
+
+.user-dropdown li:hover {
+background-color: #f7d800;
 }
 
 /* ============================ Sezioni / Rows ============================ */

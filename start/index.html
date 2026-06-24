@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
   <head>
     <meta charset="UTF-8" />
@@ -18,7 +18,20 @@
             <button class="nav-btn" aria-label="Indietro">‹</button>
             <button class="nav-btn" aria-label="Avanti">›</button>
           </div>
-          <div class="user-pill">Studente Epicode</div>
+          <!-- nuovi pill per login -->
+          <div class="no-logged">
+            <button class="user-pill">Registrati</button>
+            <button class="user-pill">Accedi</button>
+          </div>
+
+          <!-- nuovi pill per loggato -->
+          <div class="logged-user">
+            <button class="user-pill">Nome utente</button>
+            <ul class="user-dropdown">
+              <li>Profilo</li>
+              <li>Esci</li>
+            </ul>
+          </div>
         </header>
 
         <section class="home">
