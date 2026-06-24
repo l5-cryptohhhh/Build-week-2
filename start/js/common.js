@@ -295,7 +295,7 @@ class Player {
       });
     }
 
-    this.audio.volume = 0.8;
+    this.audio.volume = 0.3;
   }
 
   async play(track) {
@@ -486,6 +486,74 @@ const renderSidebar = (activePage) => {
   renderSidebarFavs();
 };
 
+/* ============================ 6b. Carousel righe ============================ */
+
+/*
+  decorateRow(row)
+  - aggiunge due freccette (◀ ▶) sul lato destro della riga
+  - le freccette scorrono la .grid (riga unica) a sinistra/destra
+  - si auto-disabilitano a inizio/fine scroll e si nascondono se non c'è da scorrere
+*/
+const ROW_SCROLL_STEP = 600;
+
+const decorateRow = (row) => {
+  if (row.dataset.carousel === "1") return;
+  const grid = row.querySelector(".grid");
+  if (!grid) return;
+  row.dataset.carousel = "1";
+
+  const arrows = document.createElement("div");
+  arrows.classList.add("row-arrows");
+
+  const btnPrev = document.createElement("button");
+  btnPrev.type = "button";
+  btnPrev.classList.add("row-arrow");
+  btnPrev.setAttribute("aria-label", "Scorri indietro");
+  btnPrev.textContent = "‹";
+
+  const btnNext = document.createElement("button");
+  btnNext.type = "button";
+  btnNext.classList.add("row-arrow");
+  btnNext.setAttribute("aria-label", "Scorri avanti");
+  btnNext.textContent = "›";
+
+  const updateArrows = () => {
+    const maxScroll = grid.scrollWidth - grid.clientWidth;
+    btnPrev.disabled = grid.scrollLeft <= 0;
+    btnNext.disabled = grid.scrollLeft >= maxScroll - 1;
+    arrows.style.display = maxScroll <= 1 ? "none" : "flex";
+  };
+
+  btnPrev.addEventListener("click", () =>
+    grid.scrollBy({ left: -ROW_SCROLL_STEP, behavior: "smooth" }),
+  );
+  btnNext.addEventListener("click", () =>
+    grid.scrollBy({ left: ROW_SCROLL_STEP, behavior: "smooth" }),
+  );
+
+  grid.addEventListener("scroll", updateArrows);
+  window.addEventListener("resize", updateArrows);
+
+  arrows.appendChild(btnPrev);
+  arrows.appendChild(btnNext);
+  row.appendChild(arrows);
+
+  updateArrows();
+  // le card possono arrivare dopo (fetch async / ricerca): ricontrolla
+  new MutationObserver(updateArrows).observe(grid, { childList: true });
+};
+
+/*
+  setupCarousels()
+  - decora le righe già presenti e quelle aggiunte dopo (es. Home async)
+*/
+const setupCarousels = () => {
+  document.querySelectorAll(".row").forEach(decorateRow);
+  new MutationObserver(() => {
+    document.querySelectorAll(".row").forEach(decorateRow);
+  }).observe(document.body, { childList: true, subtree: true });
+};
+
 /* ============================ 7. Inizializzazione ============================ */
 
 /*
@@ -502,6 +570,8 @@ const initPage = (activePage) => {
   const [btnBack, btnForward] = document.querySelectorAll(".nav-btn");
   if (btnBack) btnBack.addEventListener("click", () => history.back());
   if (btnForward) btnForward.addEventListener("click", () => history.forward());
+
+  setupCarousels();
 
   return player;
 };

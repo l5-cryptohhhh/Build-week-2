@@ -213,17 +213,64 @@ button {
 
 .row {
   margin-top: 24px;
+  position: relative;
 }
 .row h2 {
   margin: 0 0 12px 0;
   font-size: 22px;
   font-weight: 700;
+  padding-right: 88px; /* spazio per le freccette */
 }
 
-.grid {
+/* Freccette del carousel (lato destro, in alto sulla riga) */
+.row-arrows {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  gap: 8px;
+}
+.row-arrow {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bg-elev);
+  color: var(--text-primary);
+  border: none;
+  cursor: pointer;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  place-items: center;
+  font-size: 18px;
+  line-height: 1;
+  transition: background 0.18s ease, opacity 0.18s ease;
+}
+.row-arrow:hover {
+  background: var(--bg-elev-hover);
+}
+.row-arrow:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* Riga unica scorribile orizzontalmente */
+.grid {
+  display: flex;
+  align-items: flex-start; /* niente stretch verticale -> card dritte */
   gap: 16px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none; /* Firefox */
+  padding-bottom: 4px;
+}
+.grid::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+.grid > .card {
+  flex: 0 0 180px;
+  width: 180px;
+  box-sizing: border-box;
+  scroll-snap-align: start;
 }
 
 /* ============================ Card ============================ */
@@ -676,7 +723,8 @@ button {
   .player-right {
     display: none;
   }
-  .grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  .grid > .card {
+    flex-basis: 140px;
+    width: 140px;
   }
 }
