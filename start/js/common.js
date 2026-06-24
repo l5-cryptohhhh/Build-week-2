@@ -233,6 +233,8 @@ class Player {
       this.isPlaying = false;
       if (this.elBtnToggle) this.elBtnToggle.textContent = "▶";
     });
+
+    this.previousVolume = 0.8;
   }
 
   mount() {
@@ -291,11 +293,26 @@ class Player {
     // Slider volume → setVolume
     if (this.elVolumeSlider) {
       this.elVolumeSlider.addEventListener("input", (e) => {
-        this.setVolume(parseFloat(e.target.value)); // 0..1
+        this.setVolume(parseFloat(e.target.value));
       });
     }
 
-    this.audio.volume = 0.3;
+    const volumeIcon = document.querySelector(".player-right span");
+    if (volumeIcon) {
+      volumeIcon.style.cursor = "pointer";
+      volumeIcon.addEventListener("click", () => {
+        if (this.audio.volume > 0) {
+          // Se l'audio è attivo, muto e va a 0
+          this.setVolume(0);
+        } else {
+          // Se è già muto, ripristiniamo l'ultimo volume utile memorizzato
+          this.setVolume(this.previousVolume);
+        }
+      });
+    }
+    // --
+
+    this.setVolume(0.3);
   }
 
   async play(track) {
@@ -365,6 +382,24 @@ class Player {
       const percent = vol * 100;
       volumeSlider.style.setProperty("--percent", `${percent}%`);
     }
+
+    const volumeIcon = document.querySelector(".player-right span");
+    if (volumeIcon) {
+      if (vol === 0) {
+        volumeIcon.textContent = "🔇"; // Muto (X)
+      } else if (vol < 0.3) {
+        volumeIcon.textContent = "🔈"; // Volume basso (una sola onda)
+      } else if (vol < 0.7) {
+        volumeIcon.textContent = "🔉"; // Volume medio (due onde)
+      } else {
+        volumeIcon.textContent = "🔊"; // Volume alto (tre onde)
+      }
+    }
+
+    if (vol > 0) {
+      this.previousVolume = vol;
+    }
+
   }
 
   seek(percent) {
