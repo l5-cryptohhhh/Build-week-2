@@ -196,9 +196,36 @@ button {
 }
 .user-pill {
   background: rgba(0, 0, 0, 0.6);
+  color: white;
   padding: 6px 12px;
   border-radius: 999px;
   font-weight: 600;
+  font-size: 13px;
+}
+
+.user-pill:last-child {
+  background-color: #f7d800;
+  color: black;
+}
+
+.user-pill:last-child:hover {
+  background-color: #d6ba00;
+  color: black;
+}
+
+.user-pill:hover {
+  background-color: rgba(46, 44, 44, 0.577);
+}
+
+.logged-user {
+  display: none;
+}
+
+.user-dropdown {
+  list-style: none;
+  padding: 0 8px;
+  background-color: #d6ba00;
+  color: #000;
   font-size: 13px;
 }
 
@@ -584,9 +611,6 @@ button {
   justify-content: flex-end;
   gap: 10px;
 }
-.volume-bar {
-  width: 120px;
-}
 
 /* ============================ Loading / empty ============================ */
 
@@ -599,6 +623,43 @@ button {
   padding: 32px;
   text-align: center;
   color: var(--text-secondary);
+}
+
+/* Slider Volume */
+.volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 120px;
+  height: 4px;
+  border-radius: 2px;
+  background: #4d4d4d;
+  background-image: linear-gradient(var(--text-primary), var(--text-primary));
+  background-size: var(--percent, 80%) 100%;
+  background-repeat: no-repeat;
+  cursor: pointer;
+}
+
+/* Quando passi sopra con il mouse, la parte colorata diventa verde */
+.volume-slider:hover {
+  background-image: linear-gradient(var(--success), var(--success));
+}
+
+/* Il pallino del cursore */
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--text-primary);
+  margin-top: 0;
+  opacity: 0;
+  transition: opacity 0.1s ease;
+}
+
+/* pallino solo in hover */
+.volume-slider:hover::-webkit-slider-thumb {
+  opacity: 1;
 }
 
 /* ============================ Responsive ============================ */
