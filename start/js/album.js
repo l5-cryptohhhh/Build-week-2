@@ -80,7 +80,25 @@ const loadAlbum = async () => {
   btnPlay.classList.add("btn-play-big");
   btnPlay.textContent = "▶";
 
-  btnPlay.addEventListener("click", () => player.setQueue(tracks, 0));
+  const audioEl = document.querySelector("#audio-element");
+
+  const syncBtnPlay = () => {
+    const isThisAlbum = tracks.some((t) => t.id === player.currentTrack?.id);
+    btnPlay.textContent = isThisAlbum && !audioEl.paused ? "⏸" : "▶";
+  };
+
+  btnPlay.addEventListener("click", () => {
+    const isThisAlbum = tracks.some((t) => t.id === player.currentTrack?.id);
+    if (isThisAlbum) {
+      player.togglePlay();
+    } else {
+      player.setQueue(tracks, 0);
+    }
+  });
+
+  audioEl.addEventListener("play", syncBtnPlay);
+  audioEl.addEventListener("pause", syncBtnPlay);
+  audioEl.addEventListener("ended", syncBtnPlay);
 
   //bottone cuore
 
