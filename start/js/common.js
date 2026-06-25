@@ -638,6 +638,7 @@ const pillDropdown = () => {
   const userLogged = document.querySelector(".logged-user");
   const pillUtente = userLogged.querySelector(".user-pill");
   const dropdown = document.querySelector(".user-dropdown");
+  const [profilo, esci] = dropdown.querySelectorAll("li");
 
   pillUtente.addEventListener("click", (e) => {
     dropdown.classList.toggle("open");
@@ -646,6 +647,11 @@ const pillDropdown = () => {
 
   document.addEventListener("click", (e) => {
     dropdown.classList.remove("open");
+  });
+
+  esci.addEventListener("click", (e) => {
+    logoutUser();
+    renderUserPill();
   });
 };
 // render della pill in base al'account
