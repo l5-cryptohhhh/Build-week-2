@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
   <head>
     <meta charset="UTF-8" />
@@ -19,7 +19,23 @@
             <button class="nav-btn" aria-label="Indietro">‹</button>
             <button class="nav-btn" aria-label="Avanti">›</button>
           </div>
-          <div class="user-pill">Studente Epicode</div>
+          <!-- nuovi pill per login -->
+          <div class="no-logged">
+            <button class="user-pill">Registrati</button>
+            <button class="user-pill">Accedi</button>
+          </div>
+
+          <!-- nuovi pill per loggato -->
+          <div class="logged-user">
+            <button class="user-pill">
+              <i class="bi bi-person-circle"></i>
+              <span class="user-pill-name">Nome utente</span>
+            </button>
+            <ul class="user-dropdown">
+              <li>Profilo</li>
+              <li>Esci</li>
+            </ul>
+          </div>
         </header>
 
         <section class="home">
@@ -38,6 +54,68 @@
       <footer class="player">
         <!-- Riempi via JS in common.js -->
       </footer>
+      <!-- Modale di registrazione -->
+    </div>
+    <div class="register-overlay" id="register-modal">
+      <div class="register-box">
+        <button class="register-close" type="button">X</button>
+        <h2>Crea un account</h2>
+        <form id="register-form">
+          <div class="register-field">
+            <label for="register-name">Nome</label>
+            <input type="text" id="register-name" name="name" />
+          </div>
+          <div class="register-field">
+            <label for="register-surname">Cognome</label>
+            <input type="text" id="register-surname" name="surname" />
+          </div>
+          <div class="register-field">
+            <label for="register-username">Nome utente</label>
+            <input
+              type="text"
+              id="register-username"
+              name="username"
+              required
+            />
+          </div>
+          <div class="register-field">
+            <label for="register-email">Email</label>
+            <input type="email" id="register-email" name="email" required />
+          </div>
+          <div class="register-field">
+            <label for="register-password">Password</label>
+            <input
+              type="password"
+              id="register-password"
+              name="password"
+              required
+            />
+          </div>
+          <button type="submit" class="register-submit">Crea account</button>
+        </form>
+      </div>
+    </div>
+    <div class="register-overlay" id="login-modal">
+      <div class="register-box">
+        <button class="register-close" type="button">X</button>
+        <h2>Accedi</h2>
+        <form id="login-form">
+          <div class="register-field">
+            <label for="login-username">Nome utente</label>
+            <input type="text" id="login-username" name="username" required />
+          </div>
+          <div class="register-field">
+            <label for="login-password">Password</label>
+            <input
+              type="password"
+              id="login-password"
+              name="password"
+              required
+            />
+          </div>
+          <button type="submit" class="register-submit">Accedi</button>
+        </form>
+      </div>
     </div>
 
     <audio id="audio-element"></audio>

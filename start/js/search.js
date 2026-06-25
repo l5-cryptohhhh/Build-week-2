@@ -198,6 +198,8 @@ const doSearch = async (term) => {
       fetchJSON(urlArtists),
     ]);
 
+    // I dati di iTunes sono "grezzi" (trackName, artistName, ...): li trasformiamo
+    // nei modelli Track/Album/Artist (definiti in common.js) che le render*Card si aspettano.
     const newTrack = dataTracks.results.map((raw) => {
       return new Track(raw);
     });
@@ -210,10 +212,14 @@ const doSearch = async (term) => {
       return new Artist(raw);
     });
 
+    // Svuotiamo le grid prima di ridisegnarle, altrimenti i risultati della ricerca
+    // precedente resterebbero visibili insieme ai nuovi.
     gridTracks.innerHTML = "";
     gridAlbums.innerHTML = "";
     gridArtists.innerHTML = "";
 
+    // Per ogni modello creiamo la card (render*Card ritorna un <div>, non lo inserisce
+    // da sola nella pagina) e la attacchiamo alla grid con appendChild.
     newTrack.forEach((track) => {
       gridTracks.appendChild(renderTrackCard(track));
     });
@@ -226,6 +232,7 @@ const doSearch = async (term) => {
       gridArtists.appendChild(renderArtistCard(artist));
     });
 
+    // Mostriamo ogni row solo se ci sono risultati per quella categoria.
     if (newTrack.length === 0) {
       rowTracks.hidden = true;
     } else {
@@ -244,17 +251,24 @@ const doSearch = async (term) => {
       rowArtists.hidden = false;
     }
 
+    // Salviamo la query corrente così al prossimo caricamento della pagina
+    // possiamo riproporla in automatico (vedi blocco sotto).
     localStorage.setItem(STORAGE_KEY_LAST_SEARCH, term);
   }
 };
 
 const debouncedSearch = debounce(doSearch, 400);
 
+// Si attiva solo quando l'utente digita (evento "input"): non basta per ripristinare
+// l'ultima ricerca al caricamento della pagina, perché in quel momento nessun
+// evento "input" è ancora scattato.
 input.addEventListener("input", (event) => {
   debouncedSearch(event.target.value.trim());
 });
 
-// TODO: al caricamento, recupera l'ultima query da localStorage e lancia doSearch(lastQuery)
+// Eseguito una sola volta al caricamento dello script (non dentro un evento):
+// se in localStorage c'è una ricerca precedente, la rimettiamo nell'input
+// e rilanciamo doSearch con quel valore, così l'utente la ritrova subito.
 if (localStorage.getItem(STORAGE_KEY_LAST_SEARCH) !== null) {
   const lastSearch = localStorage.getItem(STORAGE_KEY_LAST_SEARCH);
   input.value = lastSearch;
