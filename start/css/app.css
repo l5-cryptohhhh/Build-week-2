@@ -631,8 +631,22 @@ button {
   max-width: 600px;
   font-size: 11px;
   color: var(--text-secondary);
+  position: relative;
 }
-.progress-bar,
+
+.progress-tooltip {
+  display: none;
+  position: absolute;
+  bottom: 28px;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  pointer-events: none;
+  white-space: nowrap;
+}
 .volume-bar {
   flex: 1;
   height: 4px;
@@ -642,14 +656,12 @@ button {
   cursor: pointer;
   position: relative;
 }
-.progress-fill,
 .volume-fill {
   height: 100%;
   width: 0%;
   background: var(--text-primary);
   border-radius: 2px;
 }
-.progress-bar:hover .progress-fill,
 .volume-bar:hover .volume-fill {
   background: var(--success);
 }
@@ -672,6 +684,39 @@ button {
   padding: 32px;
   text-align: center;
   color: var(--text-secondary);
+}
+
+/* Slider Progress */
+.progress-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: #4d4d4d;
+  background-image: linear-gradient(var(--text-primary), var(--text-primary));
+  background-size: var(--percent, 0%) 100%;
+  background-repeat: no-repeat;
+  cursor: pointer;
+}
+
+.progress-slider:hover {
+  background-image: linear-gradient(var(--success), var(--success));
+}
+
+.progress-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--text-primary);
+  opacity: 0;
+  transition: opacity 0.1s ease;
+}
+
+.progress-slider:hover::-webkit-slider-thumb {
+  opacity: 1;
 }
 
 /* Slider Volume */
@@ -951,11 +996,12 @@ button {
   align-items: center;  
   padding: 16px 8px 24px 8px;
   gap: 0;
+  
 }
 
 .brand-logo {
   width: 40px;      
-  height: 40px;
+  height: 45px;
   object-fit: contain;
   border-radius: 4px;
 }
