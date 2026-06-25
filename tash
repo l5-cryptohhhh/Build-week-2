@@ -1,0 +1,78 @@
+[33m2a602bb[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mYhara[m[33m)[m fix2
+[33m696ed0e[m fix
+[33m6401dfb[m pills css e richiamo funzione in js
+[33me8dbc70[m aggiunta a search
+[33m06afdca[m aggiunta ad home per "leggere" i generi della card
+[33m5f0bb50[m render pills
+[33m5ba85a0[m gestione applicazione dei filtri
+[33m68220dc[m variabili
+[33m0864b8a[m costruttore
+[33mc22a6fe[m Merge remote-tracking branch 'origin/main' into Yhara
+[33m2f8363a[m Merge pull request #28 from l5-cryptohhhh/Manuel
+[33m1f39b22[m BW2
+[33m2cec359[m Merge pull request #27 from l5-cryptohhhh/Angelo
+[33md627e7b[m Merge pull request #26 from l5-cryptohhhh/Manuel
+[33m2d28796[m BW2
+[33m6db7fc8[m funzionamento dei tasti reapet e shuffle completati
+[33m7ad8886[m Merge pull request #25 from l5-cryptohhhh/Kian
+[33m6fe7272[m Nuovo logo
+[33m93697e6[m Merge pull request #24 from l5-cryptohhhh/Angelo
+[33m08dc959[m fix bordi
+[33m7a7d8d1[m Merge pull request #23 from l5-cryptohhhh/Angelo
+[33m2298718[m aggiunta la funzione che rende visibile la cnazione se è in riproduzione
+[33m5287a7d[m Merge pull request #22 from l5-cryptohhhh/Kian
+[33m08e8bd6[m Modifica barra audio
+[33m8af333d[m Merge pull request #21 from l5-cryptohhhh/Angelo
+[33m1a8c82d[m funzionalità dei tasti riproduzione avanti indietro
+[33mf4a3572[m Merge remote-tracking branch 'origin/main' into Yhara
+[33m9d7d6e5[m Merge pull request #20 from l5-cryptohhhh/Kian
+[33meaadd62[m Icone album preferiti
+[33me20c888[m Merge pull request #19 from l5-cryptohhhh/Manuel
+[33m648fb39[m BW2
+[33mf8db387[m Merge pull request #18 from l5-cryptohhhh/Manuel
+[33m0f091eb[m BW2
+[33ma78c8a1[m Merge pull request #17 from l5-cryptohhhh/Angelo
+[33m5316c25[m pulsante back e forward funzionanti
+[33m1d956a6[m Merge pull request #16 from l5-cryptohhhh/Manuel
+[33m574aa4d[m BW2
+[33m77964cf[m modifiche
+[33m71ca389[m Merge branch 'main' of https://github.com/l5-cryptohhhh/Build-week-2 into Yhara
+[33m8d7a757[m Merge pull request #15 from l5-cryptohhhh/Branch-BaldGuy
+[33mdcda585[m[33m ([m[1;31morigin/Branch-BaldGuy[m[33m)[m Merge remote-tracking branch 'origin/main' into Branch-BaldGuy
+[33mfc1dde6[m Merge pull request #14 from l5-cryptohhhh/Manuel
+[33m0f6f92c[m Do search finito e "ultima ricerca" fatta
+[33mad6a2de[m BW2
+[33md39d16c[m Merge pull request #13 from l5-cryptohhhh/Angelo
+[33m19778a2[m ciao manu, come stai? ho completato quello che rimaneva da fare in home.js. xoxo
+[33m4e57f52[m Merge pull request #12 from l5-cryptohhhh/Branch-BaldGuy
+[33m84af67a[m Fatto fetch e promise.all
+[33m350b82a[m Merge pull request #11 from l5-cryptohhhh/Kian
+[33m2b90673[m artist.js completo
+[33madcd259[m Iniziato il doSearch
+[33m96d51e0[m Merge pull request #10 from l5-cryptohhhh/Manuel
+[33mccb6b99[m common.js
+[33mf336f14[m common.js
+[33m836d3fc[m Merge pull request #9 from l5-cryptohhhh/Manuel
+[33md7110f1[m common.js
+[33ma8bde2f[m Merge pull request #8 from l5-cryptohhhh/Manuel
+[33mf4882dd[m common.js
+[33maf867a5[m Merge pull request #6 from l5-cryptohhhh/Angelo
+[33m5c1ad0e[m  Classe Player
+[33m28999b1[m aggiunto data-track-id="${track.id}" all'elemento .track-row
+[33mb75d1f7[m Merge pull request #5 from l5-cryptohhhh/Angelo
+[33m9916b97[m bottoni completati in album.js, aggiunto play, cuore e cuore ad ogni singolo brano nella lista, ! Da controllare icona cuore, non mi piace.
+[33m3ee06a4[m Aggiunti commenti con Claude per i colleghi
+[33mfe5d249[m renderAlbumCard finito
+[33m82f49a0[m Merge pull request #3 from l5-cryptohhhh/Angelo
+[33m947d640[m Merge pull request #4 from l5-cryptohhhh/Manuel
+[33m57cb30e[m RenderTrackCard completata
+[33m6051b02[m Common.js
+[33mb3ffcfe[m completamento della sezione album.js testato e funzionante
+[33ma4c35d3[m Merge remote-tracking branch 'origin/main' into Yhara
+[33m2e6f5a6[m Merge pull request #2 from l5-cryptohhhh/Angelo
+[33me391180[m 1weeee
+[33m1e7217b[m completamento del home
+[33m6811c2d[m Merge pull request #1 from l5-cryptohhhh/Angelo
+[33m9bcda21[m Gestione dei dati del api
+[33mccd848f[m BW2
+[33mc845533[m Initial commit
