@@ -63,12 +63,6 @@ const STORAGE_KEY_HISTORY = "epitunes_history";
 const STORAGE_KEY_FAVOURITES = "epitunes_favourites";
 const STORAGE_KEY_LAST_SEARCH = "epitunes_last_search";
 const MAX_HISTORY = 12;
-// const per login
-const STORAGE_KEY_USER = "musicode_account";
-// creo un array per tenere più account
-const STORAGE_KEY_ACCOUNTS = "musicode_accounts";
-// costante di sessione attiva per mantenere il login e fare il logout
-const STORAGE_KEY_SESSION = "musicode_active_session";
 
 /* ============================ 2. Helpers ============================ */
 
@@ -148,6 +142,7 @@ class Track {
     this.cover = raw.artworkUrl100;
     this.previewUrl = raw.previewUrl;
     this.durationMs = raw.trackTimeMillis;
+    this.genre = raw.primaryGenreName || "";
 
     // TODO: assegna alle property di this i valori da raw
     // (id, title, artist, album, albumId, artistId, cover, previewUrl, durationMs)
@@ -328,15 +323,9 @@ class Player {
       this.elProgressSlider.addEventListener("mousemove", (e) => {
         if (!this.audio.duration) return;
         const sliderRect = this.elProgressSlider.getBoundingClientRect();
-        const containerRect =
-          this.elProgressSlider.parentElement.getBoundingClientRect();
-        const percent = Math.min(
-          1,
-          Math.max(0, (e.clientX - sliderRect.left) / sliderRect.width),
-        );
-        progressTooltip.textContent = formatTime(
-          percent * this.audio.duration * 1000,
-        );
+        const containerRect = this.elProgressSlider.parentElement.getBoundingClientRect();
+        const percent = Math.min(1, Math.max(0, (e.clientX - sliderRect.left) / sliderRect.width));
+        progressTooltip.textContent = formatTime(percent * this.audio.duration * 1000);
         progressTooltip.style.display = "block";
         progressTooltip.style.left = `${e.clientX - containerRect.left}px`;
       });
@@ -351,10 +340,7 @@ class Player {
         this.audio.pause();
       });
       this.elProgressSlider.addEventListener("input", (e) => {
-        this.elProgressSlider.style.setProperty(
-          "--percent",
-          `${e.target.value}%`,
-        );
+        this.elProgressSlider.style.setProperty("--percent", `${e.target.value}%`);
       });
       this.elProgressSlider.addEventListener("change", (e) => {
         this._isSeeking = false;
@@ -579,54 +565,6 @@ const toggleFavourite = (track) => {
   renderSidebarFavs();
   // avvisa la pagina che la libreria è cambiata (la home si ridisegna)
   document.dispatchEvent(new CustomEvent("library:changed"));
-};
-// funzione per capire se l'utente è loggato
-const getCurrentUser = () => {
-  const username = localStorage.getItem(STORAGE_KEY_SESSION);
-  if (username === null) {
-    return null;
-  } else {
-    return getAccounts().find((account) => account.username === username);
-  }
-};
-// funziona fi lettura dell'array di accounts
-const getAccounts = () => {
-  const thisAccount = localStorage.getItem(STORAGE_KEY_ACCOUNTS);
-  return JSON.parse(thisAccount) || [];
-};
-// funzione di registrazione
-const registerUser = (datiUtente) => {
-  let objectUser = {
-    nome: datiUtente.name,
-    cognome: datiUtente.surname,
-    username: datiUtente.username,
-    email: datiUtente.email,
-    password: datiUtente.password,
-  };
-  // aggiunta di lettura dell'array di account, con salvataggio di nuovo account in oggetto e nell'array
-  const array = getAccounts();
-  const nuovoArray = [...array, objectUser];
-  const nuovaLista = localStorage.setItem(
-    STORAGE_KEY_ACCOUNTS,
-    JSON.stringify(nuovoArray),
-  );
-  return localStorage.setItem(STORAGE_KEY_SESSION, objectUser.username);
-};
-// login dell'utente
-const loginUser = (username, password) => {
-  const accounts = getAccounts();
-  const account = accounts.find((account) => {
-    return account.username === username && account.password === password;
-  });
-  if (account === undefined) {
-    return null;
-  }
-  localStorage.setItem(STORAGE_KEY_SESSION, account.username);
-  return account;
-};
-//funzione di logout
-const logoutUser = () => {
-  return localStorage.removeItem(STORAGE_KEY_SESSION);
 };
 
 /* ============================ 6. Render sidebar ============================ */
@@ -1029,139 +967,143 @@ const createNowPlayingPanel = () => {
 
   return { show, open, close, toggle, render };
 };
-/* ============================ 6c. Pannello "In riproduzione" ============================ */
+
+/* ============================ 6d. Filtri (solo HOME) ============================ */
+
+/* activeGenre è il genere selezionato in questo momento.
+Inizia come null.
+Quando è (es)"Pop", diventa "Pop". Quando è "Tutti", è null.
+null significa semplicemente "nessun filtro attivo → mostra tutto"*/
+let activeGenre = null;
+// true = mostra solo i brani preferiti
+let showFavsOnly = false;
+
+// array per le pills grafiche
+const FILTER_GENRES = ["Pop", "Rock"];
 
 /*
-  createNowPlayingPanel()
-  - Crea un pannello laterale a destra che mostra info sul brano IN RIPRODUZIONE
-    (non quello cliccato) e sull'artista (fetch lookup iTunes).
-  - Niente innerHTML / textContent: si usano createElement + append(stringa)
-    (append con stringa crea automaticamente un nodo di testo) e replaceChildren.
-  - API: { show(track), open(), close(), toggle() }
+  APPLICARE FILTRI
+  - Se showFavsOnly è true: nasconde TUTTO tranne la row dei preferiti,
+    poi filtra per genere solo dentro quella row
+  - Se showFavsOnly è false: mostra tutte le row normalmente,
+    poi scorre tutte le .card con forEach e nasconde quelle che non soddisfano activeGenre
+  - Nasconde l'intera .row se non rimane nessuna card visibile
+    (controlla !row.hidden per non sovrascrivere le row già nascoste da home.js)
+  - Va chiamata ogni volta che cambiano i filtri O il contenuto delle griglie
 */
+const applyFilters = () => {
+  if (showFavsOnly) {
+    // modalità preferiti: nascondi TUTTO tranne la row dei preferiti
+    document.querySelectorAll(".row").forEach((row) => {
+      const isFavRow = row.dataset.rowType === "favourites";
+      row.style.display = isFavRow ? "" : "none";
+    });
 
-// imposta il testo di un elemento senza usare textContent/innerHTML
+    // filtra per genere dentro la row dei preferiti
+    const favRow = document.querySelector(".row[data-row-type='favourites']");
+    if (favRow) {
+      favRow.querySelectorAll(".card").forEach((card) => {
+        const genreOk = !activeGenre || card.dataset.genre === activeGenre;
+        card.style.display = genreOk ? "" : "none";
+      });
+    }
 
-const pillDropdown = () => {
-  const userLogged = document.querySelector(".logged-user");
-  const pillUtente = userLogged.querySelector(".user-pill");
-  const dropdown = document.querySelector(".user-dropdown");
-  const [profilo, esci] = dropdown.querySelectorAll("li");
-
-  pillUtente.addEventListener("click", (e) => {
-    dropdown.classList.toggle("open");
-    e.stopPropagation();
-  });
-
-  document.addEventListener("click", (e) => {
-    dropdown.classList.remove("open");
-  });
-
-  esci.addEventListener("click", (e) => {
-    logoutUser();
-    renderUserPill();
-  });
-};
-// render della pill in base al'account
-const renderUserPill = () => {
-  const userLogged = document.querySelector(".logged-user");
-  const noLogged = document.querySelector(".no-logged");
-  const account = getCurrentUser();
-  if (account === null) {
-    noLogged.style.display = "flex";
-    userLogged.style.display = "none";
   } else {
-    noLogged.style.display = "none";
-    userLogged.style.display = "flex";
+    // modalità normale: mostra tutte le row (tranne quelle già hidden da home.js)
+    document.querySelectorAll(".row").forEach((row) => {
+      if (!row.hidden) row.style.display = "";
+    });
 
-    const nomeUtente = document.querySelector(".user-pill-name");
-    nomeUtente.textContent = account.username;
+    // scorre tutte le .card con forEach e nasconde quelle che non soddisfano activeGenre
+    document.querySelectorAll(".row").forEach((row) => {
+      if (row.hidden) return;
+      const cards = row.querySelectorAll(".card");
+      let visible = 0;
+      cards.forEach((card) => {
+        const genreOk = !activeGenre || card.dataset.genre === activeGenre;
+        card.style.display = genreOk ? "" : "none";
+        if (genreOk) visible++;
+      });
+      // nasconde la row intera se non ha card visibili
+      row.style.display = visible === 0 ? "none" : "";
+    });
   }
 };
-// mostra/nascondi modale
-const modal = () => {
-  const noLoggedpill = document.querySelector(".no-logged");
-  const registrati = noLoggedpill.querySelector(".user-pill");
-  const overlayModal = document.getElementById("register-modal");
-  const closeBtn = document.querySelector(".register-close");
 
-  registrati.addEventListener("click", (e) => {
-    e.stopPropagation();
-    overlayModal.classList.add("open");
+//RENDERIZZAZIONE: costruisce e inserisce fisicamente le pills nel DOM della topbar
+/*
+  renderFilterPills(activePage)
+  1 Inietta le pills nella .topbar-nav (accanto alle frecce ‹ ›)
+  2 La pill Preferiti appare solo su home
+  3 Chiamata da initPage solo per "home"
+*/
+const renderFilterPills = (activePage) => {
+  const topbarNav = document.querySelector(".topbar-nav");
+  if (!topbarNav) return;
+
+  const bar = document.createElement("div");
+  bar.classList.add("filter-pills");
+  bar.id = "filter-pills-main";
+
+  // --- Pill "Tutti" ---
+  const pillAll = document.createElement("button");
+  pillAll.classList.add("filter-pill", "active");
+  pillAll.textContent = "Tutti";
+  // evento
+  pillAll.addEventListener("click", () => {
+    activeGenre = null;
+    bar.querySelectorAll(".filter-pill[data-genre]").forEach((p) =>
+      p.classList.remove("active")
+    );
+    pillAll.classList.add("active");
+    applyFilters();
+  });
+  bar.appendChild(pillAll);
+
+  // --- Pills generi ---
+  FILTER_GENRES.forEach((genre) => {
+    const pill = document.createElement("button");
+    pill.classList.add("filter-pill");
+    pill.dataset.genre = genre;
+    pill.textContent = genre;
+    // evento
+    pill.addEventListener("click", () => {
+      if (activeGenre === genre) {
+        // secondo click sullo stesso genere -> deseleziona
+        activeGenre = null;
+        pill.classList.remove("active");
+        pillAll.classList.add("active");
+      } else {
+        activeGenre = genre;
+        bar.querySelectorAll(".filter-pill").forEach((p) => p.classList.remove("active"));
+        pill.classList.add("active");
+      }
+      applyFilters();
+    });
+    bar.appendChild(pill);
   });
 
-  closeBtn.addEventListener("click", (e) => {
-    overlayModal.classList.remove("open");
-  });
+  // --- Pill Preferiti (solo home) ---
+  if (activePage === "home") {
+    const pillFav = document.createElement("button");
+    pillFav.classList.add("filter-pill", "filter-pill--fav");
+    pillFav.textContent = "Preferiti";
+    pillFav.addEventListener("click", () => {
+      showFavsOnly = !showFavsOnly;
+      pillFav.classList.toggle("active", showFavsOnly);
+      // disabilita/riabilita le pills Tutti, Pop, Rock
+      bar.querySelectorAll(".filter-pill:not(.filter-pill--fav)").forEach((p) => {
+        p.disabled = showFavsOnly;
+        p.style.opacity = showFavsOnly ? "0.35" : "";
+      });
+      applyFilters();
+    });
+    bar.appendChild(pillFav);
+  }
 
-  overlayModal.addEventListener("click", (e) => {
-    if (e.target === overlayModal) {
-      overlayModal.classList.remove("open");
-    }
-  });
-  // registrazione dei dati nel form, submit, salvataggio e cambio pill
-  const form = document.getElementById("register-form");
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const nomeRegistrato = document.getElementById("register-name").value;
-    const cognomeRegistrato = document.getElementById("register-surname").value;
-    const usernameRegistrato =
-      document.getElementById("register-username").value;
-    const emailRegistrato = document.getElementById("register-email").value;
-    const passwordRegistrato =
-      document.getElementById("register-password").value;
-
-    const datiUtente = {
-      name: nomeRegistrato,
-      surname: cognomeRegistrato,
-      username: usernameRegistrato,
-      email: emailRegistrato,
-      password: passwordRegistrato,
-    };
-
-    registerUser(datiUtente);
-    renderUserPill();
-    overlayModal.classList.remove("open");
-    form.reset();
-  });
+  topbarNav.appendChild(bar);
 };
-// funzione di login nella modale di login
-const loginModal = () => {
-  const noLoggedpill = document.querySelector(".no-logged");
-  const [registrati, accedi] = noLoggedpill.querySelectorAll(".user-pill");
-  const loginOverlay = document.getElementById("login-modal");
-  const closeBtn = loginOverlay.querySelector(".register-close");
-  const loginForm = document.getElementById("login-form");
 
-  accedi.addEventListener("click", (e) => {
-    e.stopPropagation();
-    loginOverlay.classList.add("open");
-  });
-
-  closeBtn.addEventListener("click", (e) => {
-    loginOverlay.classList.remove("open");
-  });
-  loginOverlay.addEventListener("click", (e) => {
-    if (e.target === loginOverlay) {
-      loginOverlay.classList.remove("open");
-    }
-  });
-  loginForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const usernameLogin = document.getElementById("login-username").value;
-    const passwordLogin = document.getElementById("login-password").value;
-
-    const datiLogin = loginUser(usernameLogin, passwordLogin);
-    if (datiLogin === null) {
-      alert("Credenziali errate");
-      return;
-    }
-
-    renderUserPill();
-    loginOverlay.classList.remove("open");
-    loginForm.reset();
-  });
-};
 /* ============================ 7. Inizializzazione ============================ */
 
 /*
@@ -1193,10 +1135,11 @@ const initPage = (activePage) => {
   if (btnForward) btnForward.addEventListener("click", () => history.forward());
 
   setupCarousels();
-  pillDropdown();
-  renderUserPill();
-  modal();
-  loginModal();
+
+  //CHIAMA RENDER PILLS perché initPage è la funzione che viene chiamata per prima su ogni pagina
+  if (activePage === "home") {
+    renderFilterPills(activePage);
+  }
 
   return player;
 };
