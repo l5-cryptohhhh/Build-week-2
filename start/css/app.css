@@ -305,7 +305,6 @@ button {
 }
 .card.is-playing {
   background: var(--bg-elev-hover);
-  box-shadow: inset 0 0 0 2px var(--success);
 }
 .card-image-wrap {
   position: relative;
@@ -390,15 +389,14 @@ button {
   opacity: 0;
   transition: opacity 0.2s;
 }
-.card:hover .card-fav,
-.card-fav.is-fav {
+.card:hover .card-fav {
   opacity: 1;
 }
 .card-fav.is-fav {
   color: var(--danger);
 }
 
-/* ============================ Hero album / artista ============================ */
+/* ============================ Hero album / artista ============================= */
 
 .album-hero,
 .artist-hero {

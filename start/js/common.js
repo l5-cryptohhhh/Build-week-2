@@ -1120,15 +1120,32 @@ const initPage = (activePage) => {
   // pannello laterale "In riproduzione"
   window.nowPlaying = createNowPlayingPanel();
 
-  // click sul brano in basso a sinistra -> apre/chiude il pannello (brano in riproduzione)
-  const playerTrack = document.querySelector(".player-track");
-  if (playerTrack) {
-    playerTrack.style.cursor = "pointer";
-    playerTrack.addEventListener("click", () => {
+  // solo cover e meta del brano in basso a sinistra -> apre/chiude il pannello
+  const playerCover = document.querySelector(".player-cover");
+  const playerMeta = document.querySelector(".player-meta");
+  [playerCover, playerMeta].forEach((el) => {
+    if (!el) return;
+    el.style.cursor = "pointer";
+    el.addEventListener("click", (e) => {
+      e.stopPropagation();
       if (player.currentTrack) window.nowPlaying.render(player.currentTrack);
       window.nowPlaying.toggle();
     });
-  }
+  });
+
+  // chiusura del pannello cliccando in un punto qualsiasi della pagina
+  // che non sia il pannello stesso o gli elementi che lo aprono
+  const nowPlayingPanel = document.querySelector("#now-playing");
+  document.addEventListener("click", (e) => {
+    if (
+      nowPlayingPanel &&
+      !nowPlayingPanel.contains(e.target) &&
+      !(playerCover && playerCover.contains(e.target)) &&
+      !(playerMeta && playerMeta.contains(e.target))
+    ) {
+      window.nowPlaying.close();
+    }
+  });
 
   const [btnBack, btnForward] = document.querySelectorAll(".nav-btn");
   if (btnBack) btnBack.addEventListener("click", () => history.back());
