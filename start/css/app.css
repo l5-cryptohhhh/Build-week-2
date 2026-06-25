@@ -31,6 +31,23 @@
   box-sizing: border-box;
 }
 
+/* ============================ Scrollbar globale (sottile, nera) ============================ */
+* {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: var(--bg-base) transparent;
+}
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--bg-base);
+  border-radius: 3px;
+}
+
 html,
 body {
   height: 100%;
@@ -741,6 +758,191 @@ button {
   }
 }
 
+
+/* ============================ Pannello "In riproduzione" ============================ */
+
+.now-playing {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 90px; /* lascia spazio al player */
+  width: 360px;
+  max-width: 85vw;
+  background: var(--bg-elev);
+  border-left: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  padding: 16px;
+  overflow-y: auto;
+  z-index: 20;
+  transform: translateX(100%);
+  transition: transform 0.28s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.now-playing.is-open {
+  transform: translateX(0);
+}
+/* i figli non si comprimono: il pannello scrolla e la cover resta intera */
+.now-playing > * {
+  flex-shrink: 0;
+}
+/* scrollbar sottile e nera come la pagina */
+.now-playing {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: var(--bg-base) transparent;
+}
+.now-playing::-webkit-scrollbar {
+  width: 6px;
+}
+.now-playing::-webkit-scrollbar-track {
+  background: transparent;
+}
+.now-playing::-webkit-scrollbar-thumb {
+  background: var(--bg-base);
+  border-radius: 3px;
+}
+
+.np-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.np-header-title {
+  font-weight: 700;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.np-close {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 18px;
+  line-height: 1;
+  padding: 4px 8px;
+  border-radius: 50%;
+}
+.np-close:hover {
+  color: var(--text-primary);
+  background: var(--bg-elev-hover);
+}
+
+.np-cover {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: #000;
+}
+.np-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.np-title {
+  font-size: 22px;
+  font-weight: 800;
+  margin: 4px 0 0 0;
+  line-height: 1.15;
+}
+.np-artist {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin: 0;
+}
+
+.np-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+.np-info-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 6px;
+}
+.np-info-key {
+  color: var(--text-secondary);
+}
+.np-info-val {
+  font-weight: 600;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 60%;
+}
+
+.np-about {
+  background: var(--bg-base);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  margin-top: 4px;
+}
+.np-about h3 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+.np-about-img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  margin-bottom: 10px;
+  display: block;
+}
+/* foto default: centrata e ritagliata come la reale, viso non tagliato (sta in alto) */
+.np-about-img.is-default {
+  object-position: center 20%;
+}
+.np-about-name {
+  margin: 0 0 4px 0;
+  font-weight: 700;
+}
+.np-about-genre {
+  margin: 0 0 8px 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+.np-about-bio {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+  max-height: 160px;
+  overflow-y: auto;
+  white-space: pre-line; /* rispetta gli a-capo della bio */
+  scrollbar-width: thin;
+  scrollbar-color: var(--bg-base) transparent;
+}
+.np-about-bio::-webkit-scrollbar {
+  width: 6px;
+}
+.np-about-bio::-webkit-scrollbar-track {
+  background: transparent;
+}
+.np-about-bio::-webkit-scrollbar-thumb {
+  background: var(--bg-base);
+  border-radius: 3px;
+}
+
+@media (max-width: 540px) {
+  .now-playing {
+    bottom: 0;
+    width: 100vw;
+    max-width: 100vw;
+  }
+}
 
 /* ============================ Stile Logo Sidebar ============================ */
 
