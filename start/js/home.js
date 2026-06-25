@@ -54,13 +54,7 @@ Se il genere manca, per evitare che la card non venga stampata affattp, la card 
   card.appendChild(pTitle);
   card.appendChild(pArtist);
 
-  card.addEventListener("click", () => {
-    if (track.albumId) {
-      window.location.href = `album.html?id=${track.albumId}`;
-    } else {
-      window.location.href = `track.html?id=${track.id}`;
-    }
-  });
+  card.addEventListener("click", () => player.setQueue(tracks, index));
 
   const btnPlay = document.createElement("button");
   btnPlay.classList.add("card-play");
