@@ -120,7 +120,7 @@ const makeRow = (rowTitle) => {
 /* Righe dinamiche (si aggiornano senza ricaricare la pagina) */
 const historyRow = makeRow("Riprodotti di recente");
 const favouritesRow = makeRow("I tuoi preferiti");
-
+favouritesRow.section.dataset.rowType = "favourites";
 /*
   renderDynamicRows()
   - ridisegna SOLO le griglie di history e preferiti con replaceChildren (no innerHTML)
@@ -149,13 +149,17 @@ const loadHome = async () => {
   renderDynamicRows();
 
   const [pop, rock, hits] = await Promise.all([
-    fetchJSON(`${API_BASE}/search?term=pop&entity=song&limit=12`),
-    fetchJSON(`${API_BASE}/search?term=rock&entity=song&limit=12`),
-    fetchJSON(`${API_BASE}/search?term=hits&entity=song&limit=12`),
+    fetchJSON(`${API_BASE}/search?term=pop&entity=song&limit=52`),
+    fetchJSON(`${API_BASE}/search?term=rock&entity=song&limit=52`),
+    fetchJSON(`${API_BASE}/search?term=hits&entity=song&limit=52`),
   ]);
-  const traccePop = pop.results.map((raw) => new Track(raw));
-  const tracceRock = rock.results.map((raw) => new Track(raw));
-  const tracceHits = hits.results.map((raw) => new Track(raw));
+const traccePop = pop.results
+  .map((raw) => new Track(raw))
+  .filter((t) => t.genre === "Pop");
+
+const tracceRock = rock.results
+  .map((raw) => new Track(raw))
+  .filter((t) => t.genre === "Rock");  const tracceHits = hits.results.map((raw) => new Track(raw));
 
   const rowPop = makeRow("Suggerimenti pop");
   rowPop.grid.replaceChildren(...traccePop.map(makeCard));

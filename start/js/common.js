@@ -687,34 +687,54 @@ let activeGenre = null;
 let showFavsOnly = false;
 
 // array per le pills grafiche
-const FILTER_GENRES = ["Pop", "Rock", "Hip-Hop/Rap", "Electronic", "R&B/Soul", "Alternative"];
-
+const FILTER_GENRES = ["Pop", "Rock"];
 /*
   APPLICARE FILTRI
-  1 Scorre tutte le .card nel documento con il for each
-  2 Nasconde quelle che non soddisfano activeGenre & showFavsOnly
-  3 Nasconde l'intera .row se non rimane nessuna card visibile
-  4 Va chiamata ogni volta che cambiano i filtri O il contenuto delle griglie
+  - Se showFavsOnly è true: nasconde TUTTO tranne la row dei preferiti,
+    poi filtra per genere solo dentro quella row
+  - Se showFavsOnly è false: mostra tutte le row normalmente,
+    poi scorre tutte le .card con forEach e nasconde quelle che non soddisfano activeGenre
+  - Nasconde l'intera .row se non rimane nessuna card visibile
+    (controlla !row.hidden per non sovrascrivere le row già nascoste da home.js)
+  - Va chiamata ogni volta che cambiano i filtri O il contenuto delle griglie
 */
 const applyFilters = () => {
-  document.querySelectorAll(".row").forEach((row) => {
-    const cards = row.querySelectorAll(".card");
-    let visible = 0;
-
-    cards.forEach((card) => {
-      const genreOk = !activeGenre || card.dataset.genre === activeGenre;
-      const favOk   = !showFavsOnly || isFavourite(Number(card.dataset.trackId));
-      const show    = genreOk && favOk;
-      card.style.display = show ? "" : "none";
-      if (show) visible++;
+  if (showFavsOnly) {
+    // modalità preferiti: nascondi TUTTO tranne la row dei preferiti
+    document.querySelectorAll(".row").forEach((row) => {
+      const isFavRow = row.dataset.rowType === "favourites";
+      row.style.display = isFavRow ? "" : "none";
     });
 
-    // nasconde la row intera se non ha card visibili
-    // (controlla !row.hidden per non sovrascrivere le row già nascoste da home.js)
-    if (!row.hidden) {
-      row.style.display = visible === 0 ? "none" : "";
+    // filtra per genere dentro la row dei preferiti
+    const favRow = document.querySelector(".row[data-row-type='favourites']");
+    if (favRow) {
+      favRow.querySelectorAll(".card").forEach((card) => {
+        const genreOk = !activeGenre || card.dataset.genre === activeGenre;
+        card.style.display = genreOk ? "" : "none";
+      });
     }
-  });
+
+  } else {
+    // modalità normale: mostra tutte le row (tranne quelle già hidden da home.js)
+    document.querySelectorAll(".row").forEach((row) => {
+      if (!row.hidden) row.style.display = "";
+    });
+
+    // scorre tutte le .card con forEach e nasconde quelle che non soddisfano activeGenre
+    document.querySelectorAll(".row").forEach((row) => {
+      if (row.hidden) return;
+      const cards = row.querySelectorAll(".card");
+      let visible = 0;
+      cards.forEach((card) => {
+        const genreOk = !activeGenre || card.dataset.genre === activeGenre;
+        card.style.display = genreOk ? "" : "none";
+        if (genreOk) visible++;
+      });
+      // nasconde la row intera se non ha card visibili
+      row.style.display = visible === 0 ? "none" : "";
+    });
+  }
 };
 //RENDERIZZAZIONE: costruisce e inserisce fisicamente le pills nel DOM della topbar
 /*
@@ -729,12 +749,13 @@ const renderFilterPills = (activePage) => {
 
   const bar = document.createElement("div");
   bar.classList.add("filter-pills");
+  bar.id = "filter-pills-main"; // id per poterla ritrovare dopo
 
   // --- Pill "Tutti" ---
   const pillAll = document.createElement("button");
   pillAll.classList.add("filter-pill", "active");
   pillAll.textContent = "Tutti";
-  //evento
+  // evento
   pillAll.addEventListener("click", () => {
     activeGenre = null;
     bar.querySelectorAll(".filter-pill[data-genre]").forEach((p) =>
@@ -751,7 +772,7 @@ const renderFilterPills = (activePage) => {
     pill.classList.add("filter-pill");
     pill.dataset.genre = genre;
     pill.textContent = genre;
-      //evento
+    // evento
     pill.addEventListener("click", () => {
       if (activeGenre === genre) {
         // secondo click sullo stesso genere -> deseleziona
@@ -768,7 +789,7 @@ const renderFilterPills = (activePage) => {
     bar.appendChild(pill);
   });
 
-  //Pill Preferiti 
+  // --- Pill Preferiti (solo home e search) ---
   if (activePage === "home" || activePage === "search") {
     const pillFav = document.createElement("button");
     pillFav.classList.add("filter-pill", "filter-pill--fav");
@@ -776,12 +797,95 @@ const renderFilterPills = (activePage) => {
     pillFav.addEventListener("click", () => {
       showFavsOnly = !showFavsOnly;
       pillFav.classList.toggle("active", showFavsOnly);
+
+      // quando attivi ♥: disabilita le pills genere principali
+      // quando disattivi ♥: le riabilita e resetta il genere secondario
+      bar.querySelectorAll(".filter-pill:not(.filter-pill--fav)").forEach((p) => {
+        p.disabled = showFavsOnly;
+        p.style.opacity = showFavsOnly ? "0.35" : "";
+      });
+
+      if (!showFavsOnly) {
+        // resetta il genere secondario nella row preferiti
+        activeGenre = null;
+        const secBar = document.querySelector("#filter-pills-favs");
+        if (secBar) {
+          secBar.querySelectorAll(".filter-pill").forEach((p) => p.classList.remove("active"));
+          secBar.querySelector(".filter-pill").classList.add("active");
+        }
+      }
+
       applyFilters();
+      renderSecondaryPills(); // crea/mostra le pills secondarie sotto "I tuoi preferiti"
     });
     bar.appendChild(pillFav);
   }
 
   topbarNav.appendChild(bar);
+};
+/*
+  renderSecondaryPills()
+  - Crea una seconda barra di pills accanto all'h2 "I tuoi preferiti"
+  - Appare solo quando showFavsOnly è true
+  - Filtra per genere dentro la row dei preferiti
+*/
+const renderSecondaryPills = () => {
+  // rimuovi eventuale barra già esistente
+  const existing = document.querySelector("#filter-pills-favs");
+  if (existing) existing.remove();
+
+  if (!showFavsOnly) return;
+
+  const favRow = document.querySelector(".row[data-row-type='favourites']");
+  if (!favRow) return;
+
+  const h2 = favRow.querySelector("h2");
+  if (!h2) return;
+
+  const bar = document.createElement("div");
+  bar.classList.add("filter-pills");
+  bar.id = "filter-pills-favs";
+  bar.style.display = "inline-flex";
+  bar.style.marginLeft = "16px";
+  bar.style.verticalAlign = "middle";
+
+  // Pill "Tutti"
+  const pillAll = document.createElement("button");
+  pillAll.classList.add("filter-pill", "active");
+  pillAll.textContent = "Tutti";
+  pillAll.addEventListener("click", () => {
+    activeGenre = null;
+    bar.querySelectorAll(".filter-pill[data-genre]").forEach((p) =>
+      p.classList.remove("active")
+    );
+    pillAll.classList.add("active");
+    applyFilters();
+  });
+  bar.appendChild(pillAll);
+
+  // Pills generi
+  FILTER_GENRES.forEach((genre) => {
+    const pill = document.createElement("button");
+    pill.classList.add("filter-pill");
+    pill.dataset.genre = genre;
+    pill.textContent = genre;
+    pill.addEventListener("click", () => {
+      if (activeGenre === genre) {
+        activeGenre = null;
+        pill.classList.remove("active");
+        pillAll.classList.add("active");
+      } else {
+        activeGenre = genre;
+        bar.querySelectorAll(".filter-pill").forEach((p) => p.classList.remove("active"));
+        pill.classList.add("active");
+      }
+      applyFilters();
+    });
+    bar.appendChild(pill);
+  });
+
+  // inserisci dopo l'h2
+  h2.insertAdjacentElement("afterend", bar);
 };
 /* ============================ 7. Inizializzazione ============================ */
 
