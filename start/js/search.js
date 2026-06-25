@@ -58,8 +58,16 @@ const renderTrackCard = (track) => {
 
   // Click su tutta la card (non solo sul bottone ▶) per riprodurre il brano:
   // cardPlay non ha un suo listener separato, l'evento sale (bubbling) da lui a cardDiv.
-  cardDiv.addEventListener("click", (e) => {
-    e.preventDefault();
+  cardDiv.addEventListener("click", () => {
+    if (track.albumId) {
+      window.location.href = `album.html?id=${track.albumId}`;
+    } else {
+      window.location.href = `track.html?id=${track.id}`;
+    }
+  });
+
+  cardPlay.addEventListener("click", (e) => {
+    e.stopPropagation();
     player.play(track);
   });
 

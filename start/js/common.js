@@ -496,9 +496,6 @@ const addToHistory = (track) => {
   const tagliato = newArray.slice(0, MAX_HISTORY);
   localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(tagliato));
 
-  // avvisa la pagina che la libreria è cambiata (la home si ridisegna)
-  document.dispatchEvent(new CustomEvent("library:changed"));
-
   // TODO: array = getHistory(); rimuovi eventuale duplicato (per id);
   //       metti track in testa; tronca a MAX_HISTORY; salva
 };

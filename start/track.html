@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EpiTunes — Brano</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    />
+    <link rel="stylesheet" href="css/app.css" />
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar"></aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div class="topbar-nav">
+            <button class="nav-btn" aria-label="Indietro">‹</button>
+            <button class="nav-btn" aria-label="Avanti">›</button>
+          </div>
+          <div class="user-pill">Studente Epicode</div>
+        </header>
+
+        <section class="album-page">
+          <div class="album-hero" id="track-hero"></div>
+        </section>
+      </main>
+
+      <footer class="player"></footer>
+    </div>
+
+    <audio id="audio-element"></audio>
+
+    <script src="js/common.js"></script>
+    <script src="js/track.js"></script>
+  </body>
+</html>
