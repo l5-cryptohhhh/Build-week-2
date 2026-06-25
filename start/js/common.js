@@ -689,6 +689,33 @@ let showFavsOnly = false;
 // array per le pills grafiche
 const FILTER_GENRES = ["Pop", "Rock", "Hip-Hop/Rap", "Electronic", "R&B/Soul", "Alternative"];
 
+/*
+  applyFilters()
+  1 Scorre tutte le .card nel documento con il for each
+  2 Nasconde quelle che non soddisfano activeGenre & showFavsOnly
+  3 Nasconde l'intera .row se non rimane nessuna card visibile
+  4 Va chiamata ogni volta che cambiano i filtri O il contenuto delle griglie
+*/
+const applyFilters = () => {
+  document.querySelectorAll(".row").forEach((row) => {
+    const cards = row.querySelectorAll(".card");
+    let visible = 0;
+
+    cards.forEach((card) => {
+      const genreOk = !activeGenre || card.dataset.genre === activeGenre;
+      const favOk   = !showFavsOnly || isFavourite(Number(card.dataset.trackId));
+      const show    = genreOk && favOk;
+      card.style.display = show ? "" : "none";
+      if (show) visible++;
+    });
+
+    // nasconde la row intera se non ha card visibili
+    // (controlla !row.hidden per non sovrascrivere le row già nascoste da home.js)
+    if (!row.hidden) {
+      row.style.display = visible === 0 ? "none" : "";
+    }
+  });
+};
 /* ============================ 7. Inizializzazione ============================ */
 
 /*
