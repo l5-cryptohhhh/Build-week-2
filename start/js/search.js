@@ -34,7 +34,12 @@ const gridArtists = document.querySelector("#grid-artists");
 // Si aspetta un'istanza di Track con: id, title, artist, cover, previewUrl (contratto definito in common.js)
 const renderTrackCard = (track) => {
   const cardDiv = document.createElement("div");
+
   cardDiv.classList.add("card");
+
+  //Gestisce le pills e "legge" i generi e lo stato fav sulle card della ricerca
+  cardDiv.dataset.trackId = track.id;                  // serve per il filtro fav
+  if (track.genre) cardDiv.dataset.genre = track.genre; // serve per il filtro genere
 
   const imageWrap = document.createElement("div");
   imageWrap.classList.add("card-image-wrap");
