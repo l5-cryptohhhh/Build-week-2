@@ -694,6 +694,48 @@ button {
   opacity: 1;
 }
 
+/* ============================ Filter Pills ============================ */
+
+.filter-pills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin-left: 12px;
+}
+.filter-pills::-webkit-scrollbar { display: none; }
+
+.filter-pill {
+  flex-shrink: 0;
+  padding: 5px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+.filter-pill:hover {
+  background: var(--bg-elev-hover);
+  color: var(--text-primary);
+}
+/* pill attiva (genere selezionato o "Tutti") */
+.filter-pill.active {
+  background: var(--text-primary);
+  color: var(--bg-base);
+  border-color: var(--text-primary);
+}
+/* pill ♥ attiva -> rossa */
+.filter-pill--fav.active {
+  background: var(--danger);
+  color: #fff;
+  border-color: var(--danger);
+}
 /* ============================ Responsive ============================ */
 
 @media (max-width: 800px) {

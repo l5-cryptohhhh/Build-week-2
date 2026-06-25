@@ -234,6 +234,8 @@ const doSearch = async (term) => {
     }
 
     localStorage.setItem(STORAGE_KEY_LAST_SEARCH, term);
+    // ricalcola filtri sui nuovi risultati
+applyFilters();
   }
 };
 
