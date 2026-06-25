@@ -63,6 +63,12 @@ const STORAGE_KEY_HISTORY = "epitunes_history";
 const STORAGE_KEY_FAVOURITES = "epitunes_favourites";
 const STORAGE_KEY_LAST_SEARCH = "epitunes_last_search";
 const MAX_HISTORY = 12;
+// const per login
+const STORAGE_KEY_USER = "musicode_account";
+// creo un array per tenere più account
+const STORAGE_KEY_ACCOUNTS = "musicode_accounts";
+// costante di sessione attiva per mantenere il login e fare il logout
+const STORAGE_KEY_SESSION = "musicode_active_session";
 
 /* ============================ 2. Helpers ============================ */
 
@@ -322,9 +328,15 @@ class Player {
       this.elProgressSlider.addEventListener("mousemove", (e) => {
         if (!this.audio.duration) return;
         const sliderRect = this.elProgressSlider.getBoundingClientRect();
-        const containerRect = this.elProgressSlider.parentElement.getBoundingClientRect();
-        const percent = Math.min(1, Math.max(0, (e.clientX - sliderRect.left) / sliderRect.width));
-        progressTooltip.textContent = formatTime(percent * this.audio.duration * 1000);
+        const containerRect =
+          this.elProgressSlider.parentElement.getBoundingClientRect();
+        const percent = Math.min(
+          1,
+          Math.max(0, (e.clientX - sliderRect.left) / sliderRect.width),
+        );
+        progressTooltip.textContent = formatTime(
+          percent * this.audio.duration * 1000,
+        );
         progressTooltip.style.display = "block";
         progressTooltip.style.left = `${e.clientX - containerRect.left}px`;
       });
@@ -339,7 +351,10 @@ class Player {
         this.audio.pause();
       });
       this.elProgressSlider.addEventListener("input", (e) => {
-        this.elProgressSlider.style.setProperty("--percent", `${e.target.value}%`);
+        this.elProgressSlider.style.setProperty(
+          "--percent",
+          `${e.target.value}%`,
+        );
       });
       this.elProgressSlider.addEventListener("change", (e) => {
         this._isSeeking = false;
@@ -564,6 +579,54 @@ const toggleFavourite = (track) => {
   renderSidebarFavs();
   // avvisa la pagina che la libreria è cambiata (la home si ridisegna)
   document.dispatchEvent(new CustomEvent("library:changed"));
+};
+// funzione per capire se l'utente è loggato
+const getCurrentUser = () => {
+  const username = localStorage.getItem(STORAGE_KEY_SESSION);
+  if (username === null) {
+    return null;
+  } else {
+    return getAccounts().find((account) => account.username === username);
+  }
+};
+// funziona fi lettura dell'array di accounts
+const getAccounts = () => {
+  const thisAccount = localStorage.getItem(STORAGE_KEY_ACCOUNTS);
+  return JSON.parse(thisAccount) || [];
+};
+// funzione di registrazione
+const registerUser = (datiUtente) => {
+  let objectUser = {
+    nome: datiUtente.name,
+    cognome: datiUtente.surname,
+    username: datiUtente.username,
+    email: datiUtente.email,
+    password: datiUtente.password,
+  };
+  // aggiunta di lettura dell'array di account, con salvataggio di nuovo account in oggetto e nell'array
+  const array = getAccounts();
+  const nuovoArray = [...array, objectUser];
+  const nuovaLista = localStorage.setItem(
+    STORAGE_KEY_ACCOUNTS,
+    JSON.stringify(nuovoArray),
+  );
+  return localStorage.setItem(STORAGE_KEY_SESSION, objectUser.username);
+};
+// login dell'utente
+const loginUser = (username, password) => {
+  const accounts = getAccounts();
+  const account = accounts.find((account) => {
+    return account.username === username && account.password === password;
+  });
+  if (account === undefined) {
+    return null;
+  }
+  localStorage.setItem(STORAGE_KEY_SESSION, account.username);
+  return account;
+};
+//funzione di logout
+const logoutUser = () => {
+  return localStorage.removeItem(STORAGE_KEY_SESSION);
 };
 
 /* ============================ 6. Render sidebar ============================ */
@@ -966,7 +1029,384 @@ const createNowPlayingPanel = () => {
 
   return { show, open, close, toggle, render };
 };
+/* ============================ 6c. Pannello "In riproduzione" ============================ */
 
+/*
+  createNowPlayingPanel()
+  - Crea un pannello laterale a destra che mostra info sul brano IN RIPRODUZIONE
+    (non quello cliccato) e sull'artista (fetch lookup iTunes).
+  - Niente innerHTML / textContent: si usano createElement + append(stringa)
+    (append con stringa crea automaticamente un nodo di testo) e replaceChildren.
+  - API: { show(track), open(), close(), toggle() }
+*/
+
+// imposta il testo di un elemento senza usare textContent/innerHTML
+const setText = (el, str) => {
+  el.replaceChildren();
+  el.append(str == null ? "" : String(str));
+};
+
+/*
+  getArtistInfo(name) -> { photo, bio, genre, formedYear }
+  - Cerca l'artista su TheAudioDB (foto + bio reali, non presenti su iTunes)
+  - Cache condivisa: usata sia dal pannello "In riproduzione" sia dalle card artista
+  - In caso di artista non trovato ritorna campi vuoti
+*/
+const audioDbCache = new Map();
+const getArtistInfo = async (name) => {
+  if (!name) return { photo: "", bio: "", genre: "", formedYear: "" };
+  if (audioDbCache.has(name)) return audioDbCache.get(name);
+
+  const photoOf = (a) => a.strArtistThumb || a.strArtistFanart || "";
+
+  const searchArtists = async (q) => {
+    const data = await fetchJSON(
+      `https://www.theaudiodb.com/api/v1/json/2/search.php?s=${encodeURIComponent(
+        q,
+      )}`,
+    );
+    return (data && data.artists) || [];
+  };
+
+  // nome ripulito da featuring/collaborazioni: "Snoop Dogg feat. Dr. Dre" -> "Snoop Dogg"
+  const cleanName = name
+    .split(/\s*(?:feat\.?|ft\.?|featuring|&|,|\/|\bx\b|with)\s+/i)[0]
+    .trim();
+
+  let artists = await searchArtists(name);
+  if (!artists.length && cleanName && cleanName !== name) {
+    artists = await searchArtists(cleanName);
+  }
+  // tra più risultati scegli il primo CHE HA una foto (evita duplicati vuoti);
+  // se nessuno ha foto, ripiega sul primo
+  const raw = artists.find((a) => photoOf(a)) || artists[0] || null;
+  const info = raw
+    ? {
+        photo: photoOf(raw),
+        bio: raw.strBiographyEN || "",
+        genre: raw.strGenre || "",
+        formedYear: raw.intFormedYear || "",
+      }
+    : { photo: "", bio: "", genre: "", formedYear: "" };
+  audioDbCache.set(name, info);
+  return info;
+};
+
+const createNowPlayingPanel = () => {
+  // evita doppioni se initPage viene chiamato più volte
+  const existing = document.querySelector("#now-playing");
+  if (existing) existing.remove();
+
+  const panel = document.createElement("aside");
+  panel.classList.add("now-playing");
+  panel.id = "now-playing";
+
+  // --- Header: nome artista + chiudi ---
+  const header = document.createElement("div");
+  header.classList.add("np-header");
+
+  const headerTitle = document.createElement("span");
+  headerTitle.classList.add("np-header-title");
+  setText(headerTitle, "In riproduzione");
+
+  const btnClose = document.createElement("button");
+  btnClose.classList.add("np-close");
+  btnClose.setAttribute("aria-label", "Chiudi");
+  setText(btnClose, "✕");
+
+  header.appendChild(headerTitle);
+  header.appendChild(btnClose);
+
+  // --- Cover grande ---
+  const coverWrap = document.createElement("div");
+  coverWrap.classList.add("np-cover");
+  const coverImg = document.createElement("img");
+  coverImg.alt = "";
+  coverWrap.appendChild(coverImg);
+
+  // --- Titolo + artista ---
+  const title = document.createElement("h2");
+  title.classList.add("np-title");
+
+  const artist = document.createElement("p");
+  artist.classList.add("np-artist");
+
+  // --- Info brano (album, durata) ---
+  const trackInfo = document.createElement("div");
+  trackInfo.classList.add("np-info");
+
+  const makeInfoRow = (label) => {
+    const row = document.createElement("div");
+    row.classList.add("np-info-row");
+    const k = document.createElement("span");
+    k.classList.add("np-info-key");
+    setText(k, label);
+    const v = document.createElement("span");
+    v.classList.add("np-info-val");
+    row.appendChild(k);
+    row.appendChild(v);
+    trackInfo.appendChild(row);
+    return v;
+  };
+
+  const valAlbum = makeInfoRow("Album");
+  const valYear = makeInfoRow("Anno");
+  const valGenre = makeInfoRow("Genere");
+  const valDuration = makeInfoRow("Durata");
+
+  // --- Sezione artista ---
+  const about = document.createElement("section");
+  about.classList.add("np-about");
+
+  const aboutTitle = document.createElement("h3");
+  setText(aboutTitle, "Sull'artista");
+
+  const aboutImg = document.createElement("img");
+  aboutImg.classList.add("np-about-img");
+  aboutImg.alt = "";
+  aboutImg.hidden = true;
+
+  const aboutName = document.createElement("p");
+  aboutName.classList.add("np-about-name");
+
+  const aboutGenre = document.createElement("p");
+  aboutGenre.classList.add("np-about-genre");
+
+  const aboutBio = document.createElement("p");
+  aboutBio.classList.add("np-about-bio");
+
+  about.appendChild(aboutTitle);
+  about.appendChild(aboutImg);
+  about.appendChild(aboutName);
+  about.appendChild(aboutGenre);
+  about.appendChild(aboutBio);
+
+  panel.appendChild(header);
+  panel.appendChild(coverWrap);
+  panel.appendChild(title);
+  panel.appendChild(artist);
+  panel.appendChild(trackInfo);
+  panel.appendChild(about);
+  document.body.appendChild(panel);
+
+  // cache per non rifetchare gli stessi dati
+  const itunesCache = new Map(); // chiave: trackId  -> { year, genre }
+
+  // brano corrente ancora valido? (evita di scrivere dati di un brano vecchio)
+  const stillCurrent = (track) =>
+    window.player && window.player.currentTrack === track;
+
+  // --- iTunes: anno + genere del brano (lookup per trackId) ---
+  const enrichItunes = async (track) => {
+    setText(valYear, "—");
+    setText(valGenre, "—");
+    if (!track.id) return;
+
+    if (itunesCache.has(track.id)) {
+      const c = itunesCache.get(track.id);
+      setText(valYear, c.year || "—");
+      setText(valGenre, c.genre || "—");
+      return;
+    }
+
+    const data = await fetchJSON(`${API_BASE}/lookup?id=${track.id}`);
+    const raw = (data.results || []).find((r) => r.trackId);
+    const info = {
+      year: raw && raw.releaseDate ? raw.releaseDate.slice(0, 4) : "",
+      genre: raw ? raw.primaryGenreName : "",
+    };
+    itunesCache.set(track.id, info);
+
+    if (stillCurrent(track)) {
+      setText(valYear, info.year || "—");
+      setText(valGenre, info.genre || "—");
+    }
+  };
+
+  // --- TheAudioDB: foto + bio artista (search per nome) ---
+  const enrichArtist = async (track) => {
+    aboutImg.hidden = true;
+    setText(aboutName, track.artist || "—");
+    setText(aboutGenre, "");
+    setText(aboutBio, "Caricamento info artista…");
+    setText(headerTitle, track.artist || "In riproduzione");
+
+    const name = track.artist;
+    if (!name) {
+      setText(aboutBio, "");
+      return;
+    }
+
+    const applyInfo = (info) => {
+      if (!stillCurrent(track)) return;
+      setText(aboutName, name);
+      aboutImg.hidden = false;
+      if (info.photo) {
+        aboutImg.src = info.photo;
+        aboutImg.classList.remove("is-default");
+      } else {
+        aboutImg.src = "assets/artist-default.jpeg";
+        aboutImg.classList.add("is-default");
+      }
+      const meta = [info.genre, info.formedYear].filter(Boolean).join(" · ");
+      setText(aboutGenre, meta);
+      setText(aboutBio, info.bio || "Nessuna biografia disponibile.");
+    };
+
+    const info = await getArtistInfo(name);
+    applyInfo(info);
+  };
+
+  const render = (track) => {
+    if (!track) return;
+    coverImg.src = bigArt(track.cover) || track.cover || "";
+    coverImg.alt = track.title || "";
+    setText(title, track.title || "—");
+    setText(artist, track.artist || "—");
+    setText(valAlbum, track.album || "—");
+    setText(valDuration, formatTime(track.durationMs));
+    setText(headerTitle, track.artist || "In riproduzione");
+    enrichItunes(track);
+    enrichArtist(track);
+  };
+
+  const open = () => panel.classList.add("is-open");
+  const close = () => panel.classList.remove("is-open");
+  const toggle = () => panel.classList.toggle("is-open");
+
+  const show = (track) => {
+    render(track);
+    open();
+  };
+
+  btnClose.addEventListener("click", close);
+
+  return { show, open, close, toggle, render };
+};
+
+/*
+  - Pill utente - menu a tendina
+*/
+const pillDropdown = () => {
+  const userLogged = document.querySelector(".logged-user");
+  const pillUtente = userLogged.querySelector(".user-pill");
+  const dropdown = document.querySelector(".user-dropdown");
+  const [profilo, esci] = dropdown.querySelectorAll("li");
+
+  pillUtente.addEventListener("click", (e) => {
+    dropdown.classList.toggle("open");
+    e.stopPropagation();
+  });
+
+  document.addEventListener("click", (e) => {
+    dropdown.classList.remove("open");
+  });
+
+  esci.addEventListener("click", (e) => {
+    logoutUser();
+    renderUserPill();
+  });
+};
+// render della pill in base al'account
+const renderUserPill = () => {
+  const userLogged = document.querySelector(".logged-user");
+  const noLogged = document.querySelector(".no-logged");
+  const account = getCurrentUser();
+  if (account === null) {
+    noLogged.style.display = "flex";
+    userLogged.style.display = "none";
+  } else {
+    noLogged.style.display = "none";
+    userLogged.style.display = "flex";
+
+    const nomeUtente = document.querySelector(".user-pill-name");
+    nomeUtente.textContent = account.username;
+  }
+};
+// mostra/nascondi modale
+const modal = () => {
+  const noLoggedpill = document.querySelector(".no-logged");
+  const registrati = noLoggedpill.querySelector(".user-pill");
+  const overlayModal = document.getElementById("register-modal");
+  const closeBtn = document.querySelector(".register-close");
+
+  registrati.addEventListener("click", (e) => {
+    e.stopPropagation();
+    overlayModal.classList.add("open");
+  });
+
+  closeBtn.addEventListener("click", (e) => {
+    overlayModal.classList.remove("open");
+  });
+
+  overlayModal.addEventListener("click", (e) => {
+    if (e.target === overlayModal) {
+      overlayModal.classList.remove("open");
+    }
+  });
+  // registrazione dei dati nel form, submit, salvataggio e cambio pill
+  const form = document.getElementById("register-form");
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const nomeRegistrato = document.getElementById("register-name").value;
+    const cognomeRegistrato = document.getElementById("register-surname").value;
+    const usernameRegistrato =
+      document.getElementById("register-username").value;
+    const emailRegistrato = document.getElementById("register-email").value;
+    const passwordRegistrato =
+      document.getElementById("register-password").value;
+
+    const datiUtente = {
+      name: nomeRegistrato,
+      surname: cognomeRegistrato,
+      username: usernameRegistrato,
+      email: emailRegistrato,
+      password: passwordRegistrato,
+    };
+
+    registerUser(datiUtente);
+    renderUserPill();
+    overlayModal.classList.remove("open");
+    form.reset();
+  });
+};
+// funzione di login nella modale di login
+const loginModal = () => {
+  const noLoggedpill = document.querySelector(".no-logged");
+  const [registrati, accedi] = noLoggedpill.querySelectorAll(".user-pill");
+  const loginOverlay = document.getElementById("login-modal");
+  const closeBtn = loginOverlay.querySelector(".register-close");
+  const loginForm = document.getElementById("login-form");
+
+  accedi.addEventListener("click", (e) => {
+    e.stopPropagation();
+    loginOverlay.classList.add("open");
+  });
+
+  closeBtn.addEventListener("click", (e) => {
+    loginOverlay.classList.remove("open");
+  });
+  loginOverlay.addEventListener("click", (e) => {
+    if (e.target === loginOverlay) {
+      loginOverlay.classList.remove("open");
+    }
+  });
+  loginForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const usernameLogin = document.getElementById("login-username").value;
+    const passwordLogin = document.getElementById("login-password").value;
+
+    const datiLogin = loginUser(usernameLogin, passwordLogin);
+    if (datiLogin === null) {
+      alert("Credenziali errate");
+      return;
+    }
+
+    renderUserPill();
+    loginOverlay.classList.remove("open");
+    loginForm.reset();
+  });
+};
 /* ============================ 7. Inizializzazione ============================ */
 
 /*
@@ -998,6 +1438,10 @@ const initPage = (activePage) => {
   if (btnForward) btnForward.addEventListener("click", () => history.forward());
 
   setupCarousels();
+  pillDropdown();
+  renderUserPill();
+  modal();
+  loginModal();
 
   return player;
 };
