@@ -690,7 +690,7 @@ let showFavsOnly = false;
 const FILTER_GENRES = ["Pop", "Rock", "Hip-Hop/Rap", "Electronic", "R&B/Soul", "Alternative"];
 
 /*
-  applyFilters()
+  APPLICARE FILTRI
   1 Scorre tutte le .card nel documento con il for each
   2 Nasconde quelle che non soddisfano activeGenre & showFavsOnly
   3 Nasconde l'intera .row se non rimane nessuna card visibile
@@ -716,6 +716,73 @@ const applyFilters = () => {
     }
   });
 };
+//RENDERIZZAZIONE: costruisce e inserisce fisicamente le pills nel DOM della topbar
+/*
+  renderFilterPills(activePage)
+  1 Inietta le pills nella .topbar-nav (accanto alle frecce ‹ ›)
+  2 La pill Preferiti appare solo su home e search
+  3 Chiamata da initPage solo per "home" e "search"
+*/
+const renderFilterPills = (activePage) => {
+  const topbarNav = document.querySelector(".topbar-nav");
+  if (!topbarNav) return;
+
+  const bar = document.createElement("div");
+  bar.classList.add("filter-pills");
+
+  // --- Pill "Tutti" ---
+  const pillAll = document.createElement("button");
+  pillAll.classList.add("filter-pill", "active");
+  pillAll.textContent = "Tutti";
+  //evento
+  pillAll.addEventListener("click", () => {
+    activeGenre = null;
+    bar.querySelectorAll(".filter-pill[data-genre]").forEach((p) =>
+      p.classList.remove("active")
+    );
+    pillAll.classList.add("active");
+    applyFilters();
+  });
+  bar.appendChild(pillAll);
+
+  // --- Pills generi ---
+  FILTER_GENRES.forEach((genre) => {
+    const pill = document.createElement("button");
+    pill.classList.add("filter-pill");
+    pill.dataset.genre = genre;
+    pill.textContent = genre;
+      //evento
+    pill.addEventListener("click", () => {
+      if (activeGenre === genre) {
+        // secondo click sullo stesso genere -> deseleziona
+        activeGenre = null;
+        pill.classList.remove("active");
+        pillAll.classList.add("active");
+      } else {
+        activeGenre = genre;
+        bar.querySelectorAll(".filter-pill").forEach((p) => p.classList.remove("active"));
+        pill.classList.add("active");
+      }
+      applyFilters();
+    });
+    bar.appendChild(pill);
+  });
+
+  //Pill Preferiti 
+  if (activePage === "home" || activePage === "search") {
+    const pillFav = document.createElement("button");
+    pillFav.classList.add("filter-pill", "filter-pill--fav");
+    pillFav.textContent = "Preferiti";
+    pillFav.addEventListener("click", () => {
+      showFavsOnly = !showFavsOnly;
+      pillFav.classList.toggle("active", showFavsOnly);
+      applyFilters();
+    });
+    bar.appendChild(pillFav);
+  }
+
+  topbarNav.appendChild(bar);
+};
 /* ============================ 7. Inizializzazione ============================ */
 
 /*
@@ -734,6 +801,9 @@ const initPage = (activePage) => {
   if (btnForward) btnForward.addEventListener("click", () => history.forward());
 
   setupCarousels();
-
+//CHIAMA RENDER PILLS perchè initPage è la funzione che viene chiamata per prima su ogni pagina 
+if (activePage === "home" || activePage === "search") {
+  renderFilterPills(activePage);
+}
   return player;
 };
