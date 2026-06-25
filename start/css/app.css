@@ -228,12 +228,12 @@ button {
 }
 
 .user-pill:last-child {
-  background-color: #f7d800;
+  background-color: #fd7803;
   color: black;
 }
 
 .user-pill:last-child:hover {
-  background-color: #d6ba00;
+  background-color: #d96400;
   color: black;
 }
 
@@ -252,7 +252,7 @@ button {
   top: 100%;
   padding: 0;
   list-style: none;
-  background-color: #d6ba00;
+  background-color: #d96400;
   color: #000;
   font-size: 13px;
   border-radius: 0 0 16px 16px;
@@ -277,7 +277,7 @@ button {
 }
 
 .user-dropdown li:hover {
-  background-color: #f7d800;
+  background-color: #fd7803;
 }
 
 /* ============================ Sezioni / Rows ============================ */
@@ -889,7 +889,7 @@ button {
   max-height: 80vh;
   background-color: black;
   padding: 40px;
-  border: 2px solid #f7d800;
+  border: 2px solid #fd7803;
   border-radius: 20px;
   position: relative;
   overflow: hidden;
@@ -903,8 +903,8 @@ button {
   height: 2.5rem;
   font-weight: 600;
   font-size: 13px;
-  background-color: #f7d800;
-  border: 2px solid #f7d800;
+  background-color: #fd7803;
+  border: 2px solid #fd7803;
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -923,7 +923,7 @@ button {
   border-radius: 999px;
   font-weight: 600;
   font-size: 13px;
-  background-color: #f7d800;
+  background-color: #fd7803;
 }
 /* ============================ Modale di registrazione ============================ */
 .register-overlay {
@@ -946,7 +946,7 @@ button {
   max-height: 80vh;
   background-color: black;
   padding: 40px;
-  border: 2px solid #f7d800;
+  border: 2px solid #fd7803;
   border-radius: 20px;
   position: relative;
   overflow: hidden;
@@ -960,8 +960,8 @@ button {
   height: 2.5rem;
   font-weight: 600;
   font-size: 13px;
-  background-color: #f7d800;
-  border: 2px solid #f7d800;
+  background-color: #fd7803;
+  border: 2px solid #fd7803;
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -980,7 +980,7 @@ button {
   border-radius: 999px;
   font-weight: 600;
   font-size: 13px;
-  background-color: #f7d800;
+  background-color: #fd7803;
 }
 
 /* ============================ Pannello "In riproduzione" ============================ */
