@@ -230,9 +230,19 @@ class Player {
     });
 
     this.audio.addEventListener("ended", () => {
-      this.isPlaying = false;
-      if (this.elBtnToggle) this.elBtnToggle.textContent = "▶";
+      if (this.isRepeating) {
+        this.audio.currentTime = 0;
+        this.audio.play();
+      } else {
+        this.playNext();
+      }
     });
+
+    this.previousVolume = 0.8;
+    this.isShuffling = false;
+    this.isRepeating = false;
+    this.queue = [];
+    this.currentIndex = -1;
   }
 
   mount() {
@@ -249,11 +259,11 @@ class Player {
 
       <div class="player-center">
         <div class="player-controls">
-          <button class="btn-ctrl" id="btn-shuffle" aria-label="Shuffle">⇄</button>
+          <button class="btn-ctrl" id="btn-shuffle" aria-label="Shuffle"><i class="bi bi-shuffle"></i></button>
           <button class="btn-ctrl" id="btn-prev"    aria-label="Precedente">⏮</button>
           <button class="btn-play" id="btn-toggle"  aria-label="Play/Pausa">▶</button>
           <button class="btn-ctrl" id="btn-next"    aria-label="Successivo">⏭</button>
-          <button class="btn-ctrl" id="btn-repeat"  aria-label="Ripeti">↻</button>
+          <button class="btn-ctrl" id="btn-repeat"  aria-label="Ripeti"><i class="bi bi-repeat"></i></button>
         </div>
         <div class="player-progress">
           <span id="time-current">0:00</span>
@@ -282,6 +292,27 @@ class Player {
     // Click play/pausa
     this.elBtnToggle.addEventListener("click", () => this.togglePlay());
     // Click sulla progress bar → seek
+
+    const btnPrev = document.querySelector("#btn-prev");
+    const btnNext = document.querySelector("#btn-next");
+    if (btnPrev) btnPrev.addEventListener("click", () => this.playPrev());
+    if (btnNext) btnNext.addEventListener("click", () => this.playNext());
+
+    const btnShuffle = document.querySelector("#btn-shuffle");
+    const btnRepeat = document.querySelector("#btn-repeat");
+
+    if (btnShuffle)
+      btnShuffle.addEventListener("click", () => {
+        this.isShuffling = !this.isShuffling;
+        btnShuffle.classList.toggle("btn-active", this.isShuffling);
+      });
+
+    if (btnRepeat)
+      btnRepeat.addEventListener("click", () => {
+        this.isRepeating = !this.isRepeating;
+        btnRepeat.classList.toggle("btn-active", this.isRepeating);
+      });
+
     const progressBar = document.querySelector("#progress-bar");
     progressBar.addEventListener("click", (e) => {
       const percent = e.offsetX / progressBar.clientWidth; // 0..1 dove clicchi
@@ -291,11 +322,26 @@ class Player {
     // Slider volume → setVolume
     if (this.elVolumeSlider) {
       this.elVolumeSlider.addEventListener("input", (e) => {
-        this.setVolume(parseFloat(e.target.value)); // 0..1
+        this.setVolume(parseFloat(e.target.value));
       });
     }
 
-    this.audio.volume = 0.3;
+    const volumeIcon = document.querySelector(".player-right span");
+    if (volumeIcon) {
+      volumeIcon.style.cursor = "pointer";
+      volumeIcon.addEventListener("click", () => {
+        if (this.audio.volume > 0) {
+          // Se l'audio è attivo, muto e va a 0
+          this.setVolume(0);
+        } else {
+          // Se è già muto, ripristiniamo l'ultimo volume utile memorizzato
+          this.setVolume(this.previousVolume);
+        }
+      });
+    }
+    // --
+
+    this.setVolume(0.3);
   }
 
   async play(track) {
@@ -314,6 +360,8 @@ class Player {
     } catch (errore) {
       console.error("Impossibile riprodurre il brano:", errore);
       this.isPlaying = false;
+      this.queue = [];
+      this.currentIndex = -1;
     }
 
     // 4) aggiorna UI footer
@@ -336,6 +384,13 @@ class Player {
       `.track-row[data-track-id="${track.id}"]`,
     );
     if (row) row.classList.add("is-playing");
+
+    document
+      .querySelectorAll(".card.is-playing")
+      .forEach((c) => c.classList.remove("is-playing"));
+    document
+      .querySelectorAll(`.card[data-track-id="${track.id}"]`)
+      .forEach((c) => c.classList.add("is-playing"));
   }
 
   togglePlay() {
@@ -365,12 +420,55 @@ class Player {
       const percent = vol * 100;
       volumeSlider.style.setProperty("--percent", `${percent}%`);
     }
+
+    const volumeIcon = document.querySelector(".player-right span");
+    if (volumeIcon) {
+      if (vol === 0) {
+        volumeIcon.textContent = "🔇"; // Muto (X)
+      } else if (vol < 0.3) {
+        volumeIcon.textContent = "🔈"; // Volume basso (una sola onda)
+      } else if (vol < 0.7) {
+        volumeIcon.textContent = "🔉"; // Volume medio (due onde)
+      } else {
+        volumeIcon.textContent = "🔊"; // Volume alto (tre onde)
+      }
+    }
+
+    if (vol > 0) {
+      this.previousVolume = vol;
+    }
   }
 
   seek(percent) {
     if (!this.audio.duration) return;
     this.audio.currentTime =
       this.audio.duration * Math.min(1, Math.max(0, percent));
+  }
+  setQueue(tracks, startIndex) {
+    this.queue = tracks;
+    this.currentIndex = startIndex;
+    this.play(tracks[startIndex]);
+  }
+
+  playNext() {
+    if (!this.queue || !this.queue.length) return;
+    if (this.isShuffling) {
+      this.currentIndex = Math.floor(Math.random() * this.queue.length);
+    } else {
+      this.currentIndex = (this.currentIndex + 1) % this.queue.length;
+    }
+    this.play(this.queue[this.currentIndex]);
+  }
+
+  playPrev() {
+    if (!this.queue.length) return;
+    if (this.audio.currentTime > 3) {
+      this.seek(0);
+      return;
+    }
+    this.currentIndex =
+      (this.currentIndex - 1 + this.queue.length) % this.queue.length;
+    this.play(this.queue[this.currentIndex]);
   }
 }
 
@@ -456,36 +554,36 @@ const renderSidebarFavs = () => {
     return;
   }
 
-  favs.forEach((track) => {
+  favs.forEach((track, index) => {
     const li = document.createElement("li");
     li.style.cursor = "pointer";
-    li.style.display = "flex";         // Allinea immagine e testo sulla stessa riga
-    li.style.alignItems = "center";     // Centra verticalmente l'immagine rispetto al testo
-    li.style.gap = "8px";               // Spazio tra l'immagine e il testo
-    li.style.marginBottom = "8px";      // Spazio tra un brano e l'altro
+    li.style.display = "flex"; // Allinea immagine e testo sulla stessa riga
+    li.style.alignItems = "center"; // Centra verticalmente l'immagine rispetto al testo
+    li.style.gap = "8px"; // Spazio tra l'immagine e il testo
+    li.style.marginBottom = "8px"; // Spazio tra un brano e l'altro
     li.title = `${track.title || "Brano"} — ${track.artist || "Artista"}`;
 
     const img = document.createElement("img");
     img.src = track.cover || "https://placehold.co/30x30?text=🎵"; // placeholder se non c'è immagine dispo
     img.alt = track.album || "Album";
-    img.style.width = "30px";          
+    img.style.width = "30px";
     img.style.height = "30px";
-    img.style.borderRadius = "4px";     
+    img.style.borderRadius = "4px";
     img.style.objectFit = "cover";
 
-   /* evita che il testo vada a capo, taglia il testo se troppo lungo e aggiunge i puntini di sospensione */
+    /* evita che il testo vada a capo, taglia il testo se troppo lungo e aggiunge i puntini di sospensione */
 
     const textSpan = document.createElement("span");
     textSpan.textContent = track.title || "—";
-    textSpan.style.whiteSpace = "nowrap";   
-    textSpan.style.overflow = "hidden";      
+    textSpan.style.whiteSpace = "nowrap";
+    textSpan.style.overflow = "hidden";
     textSpan.style.textOverflow = "ellipsis";
 
     li.appendChild(img);
     li.appendChild(textSpan);
 
     li.addEventListener("click", () => {
-      if (window.player) window.player.play(track);
+      if (window.player) window.player.setQueue(favs, index);
     });
     favsList.appendChild(li);
   });
@@ -496,12 +594,12 @@ const renderSidebar = (activePage) => {
   if (!sidebar) return;
   sidebar.innerHTML = `
     <div class="brand">
-      <div class="brand-mark">E</div>
-      <span class="brand-text">EpiTunes</span>
+      <img src="assets/Nuovo_Logo.png" alt="EpiTunes Logo" class="brand-logo" />
+      <span class="brand-text">usiCode</span>
     </div>
     <nav class="sidebar-nav">
-      <a href="index.html"  data-page="home"   ${activePage === "home" ? 'class="active"' : ""}><span class="ico">🏠</span><span>Home</span></a>
-      <a href="search.html" data-page="search" ${activePage === "search" ? 'class="active"' : ""}><span class="ico">🔍</span><span>Cerca</span></a>
+      <a href="index.html"  data-page="home"   ${activePage === "home" ? 'class="active"' : ""}><span class="ico"><i class="bi bi-house-door-fill"></i></span><span>Home</span></a>
+      <a href="search.html" data-page="search" ${activePage === "search" ? 'class="active"' : ""}><span class="ico"><i class="bi bi-search"></i></span><span>Cerca</span></a>
     </nav>
     <p class="sidebar-section-title">I tuoi preferiti</p>
     <ul class="sidebar-list" id="sidebar-favs"></ul>

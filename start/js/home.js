@@ -25,9 +25,10 @@ const home = document.querySelector(".home");
   - crea e restituisce una singola .card (cover, titolo, artista, play, cuore)
   - il cuore riflette lo stato reale dei preferiti e si aggiorna al click
 */
-const makeCard = (track) => {
+const makeCard = (track, index, tracks) => {
   const card = document.createElement("div");
   card.classList.add("card");
+  card.dataset.trackId = track.id;
 
   const imgWrap = document.createElement("div");
   imgWrap.classList.add("card-image-wrap");
@@ -48,7 +49,7 @@ const makeCard = (track) => {
   card.appendChild(pTitle);
   card.appendChild(pArtist);
 
-  card.addEventListener("click", () => player.play(track));
+  card.addEventListener("click", () => player.setQueue(tracks, index));
 
   const btnPlay = document.createElement("button");
   btnPlay.classList.add("card-play");
@@ -62,7 +63,7 @@ const makeCard = (track) => {
       document
         .querySelectorAll(".card-play")
         .forEach((btn) => (btn.textContent = "▶"));
-      player.play(track);
+      player.setQueue(tracks, index);
       btnPlay.textContent = "⏸";
     }
   });

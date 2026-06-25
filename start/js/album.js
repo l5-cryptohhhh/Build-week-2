@@ -80,7 +80,7 @@ const loadAlbum = async () => {
   btnPlay.classList.add("btn-play-big");
   btnPlay.textContent = "▶";
 
-  btnPlay.addEventListener("click", () => player.play(tracks[0]));
+  btnPlay.addEventListener("click", () => player.setQueue(tracks, 0));
 
   //bottone cuore
 
@@ -143,7 +143,7 @@ const loadAlbum = async () => {
 
     tracklist.appendChild(row);
 
-    row.addEventListener("click", () => player.play(track));
+    row.addEventListener("click", () => player.setQueue(tracks, index));
   });
 };
 loadAlbum();

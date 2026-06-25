@@ -23,7 +23,7 @@
 const player = initPage("home");
 
 const artistHero = document.querySelector("#artist-hero");
-const topTracks  = document.querySelector("#top-tracks");
+const topTracks = document.querySelector("#top-tracks");
 
 const loadArtist = async () => {
   try {
@@ -39,8 +39,10 @@ const loadArtist = async () => {
     }
 
     /* Fetch dei dati dall'API passo 4 */
-    const response = await fetch(`https://itunes.apple.com/lookup?id=${artistId}&entity=song&limit=15`);
-    
+    const response = await fetch(
+      `https://itunes.apple.com/lookup?id=${artistId}&entity=song&limit=15`,
+    );
+
     if (!response.ok) {
       throw new Error("Errore nel recupero dati");
     }
@@ -92,7 +94,6 @@ const loadArtist = async () => {
     subInfo.classList.add("hero-sub");
     subInfo.textContent = `${artist.primaryGenreName} • ${listeners} ascoltatori mensili`;
 
-    
     heroContent.appendChild(kicker);
     heroContent.appendChild(artistName);
     heroContent.appendChild(subInfo);
@@ -105,9 +106,9 @@ const loadArtist = async () => {
       const btnPlayBig = document.createElement("button");
       btnPlayBig.classList.add("btn-play-big");
       btnPlayBig.textContent = "▶";
-      
+
       btnPlayBig.addEventListener("click", () => {
-        player.play(trackObjs[0]);
+        player.setQueue(trackObjs, 0);
       });
 
       heroActions.appendChild(btnPlayBig);
@@ -137,7 +138,7 @@ const loadArtist = async () => {
       // Durata approssimativa o fissa (visto che trackTimeMillis potrebbe non esserci sempre)
       const trackTime = document.createElement("span");
       trackTime.classList.add("track-time");
-      
+
       if (track.trackTimeMillis) {
         const minutes = Math.floor(track.trackTimeMillis / 60000);
         const seconds = ((track.trackTimeMillis % 60000) / 1000).toFixed(0); //arrotonda
@@ -171,21 +172,22 @@ const loadArtist = async () => {
 
       // Cliccando su qualsiasi punto della riga, la traccia viene riprodotta
       trackRow.addEventListener("click", () => {
-       
-        document.querySelectorAll(".track-row").forEach(row => row.classList.remove("is-playing"));
+        document
+          .querySelectorAll(".track-row")
+          .forEach((row) => row.classList.remove("is-playing"));
         trackRow.classList.add("is-playing");
 
-        player.play(trackModel);
+        player.setQueue(trackObjs, index);
       });
 
       topTracks.appendChild(trackRow);
     });
-
   } catch (error) {
     console.error(error);
     artistHero.textContent = "";
     const errorMsg = document.createElement("h2");
-    errorMsg.textContent = "Si è verificato un errore durante il caricamento della pagina.";
+    errorMsg.textContent =
+      "Si è verificato un errore durante il caricamento della pagina.";
     artistHero.appendChild(errorMsg);
   }
 };

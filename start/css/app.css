@@ -18,7 +18,7 @@
   --text-input: #000000;
   --accent: #f7d800;        /* giallo Epicode */
   --accent-dark: #d6ba00;
-  --success: #1ed760;       /* verde "play" */
+  --success: #FD7803;       /* arancione "play" */
   --danger: #e25555;
   --border: #2a2a2a;
   --radius-sm: 6px;
@@ -285,6 +285,10 @@ button {
 }
 .card:hover {
   background: var(--bg-elev-hover);
+}
+.card.is-playing {
+  background: var(--bg-elev-hover);
+  box-shadow: inset 0 0 0 2px var(--success);
 }
 .card-image-wrap {
   position: relative;
@@ -585,6 +589,9 @@ button {
 .btn-ctrl:hover {
   color: var(--text-primary);
 }
+.btn-ctrl.btn-active {
+  color: #FD7803;
+}
 .btn-play {
   width: 36px;
   height: 36px;
@@ -732,4 +739,27 @@ button {
     flex-basis: 140px;
     width: 140px;
   }
+}
+
+
+/* ============================ Stile Logo Sidebar ============================ */
+
+.brand {
+  display: flex;
+  align-items: center;  
+  padding: 16px 8px 24px 8px;
+  gap: 0;
+}
+
+.brand-logo {
+  width: 40px;      
+  height: 40px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.brand-text {
+  font-size: 20px;
+  font-weight: bold;
+  line-height: 1;
 }
