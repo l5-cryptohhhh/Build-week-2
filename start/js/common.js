@@ -676,6 +676,19 @@ const setupCarousels = () => {
   }).observe(document.body, { childList: true, subtree: true });
 };
 
+/*Filtri solo HOME e SEARCH*/
+
+/* activeGenre è il genere selezionato in questo momento.
+Inizia come null.
+Quando è (es)"Pop", diventa "Pop". Quando è "Tutti", è null.
+null significa semplicemente "nessun filtro attivo → mostra tutto"*/
+let activeGenre = null;
+// true = mostra solo i brani pref
+let showFavsOnly = false;
+
+// array per le pills grafiche
+const FILTER_GENRES = ["Pop", "Rock", "Hip-Hop/Rap", "Electronic", "R&B/Soul", "Alternative"];
+
 /* ============================ 7. Inizializzazione ============================ */
 
 /*
