@@ -63,8 +63,16 @@ const renderTrackCard = (track) => {
 
   // Click su tutta la card (non solo sul bottone ▶) per riprodurre il brano:
   // cardPlay non ha un suo listener separato, l'evento sale (bubbling) da lui a cardDiv.
-  cardDiv.addEventListener("click", (e) => {
-    e.preventDefault();
+  cardDiv.addEventListener("click", () => {
+    if (track.albumId) {
+      window.location.href = `album.html?id=${track.albumId}`;
+    } else {
+      window.location.href = `track.html?id=${track.id}`;
+    }
+  });
+
+  cardPlay.addEventListener("click", (e) => {
+    e.stopPropagation();
     player.play(track);
   });
 
@@ -123,13 +131,21 @@ const renderArtistCard = (artist) => {
   const imageWrap = document.createElement("div");
   imageWrap.classList.add("card-image-wrap", "round");
 
-  // L'API iTunes (entity=musicArtist) non fornisce artwork: usiamo un'immagine
-  // di default uguale per tutti gli artisti, con il viso centrato (vedi CSS).
+  // L'API iTunes (entity=musicArtist) non fornisce artwork: partiamo con un'immagine
+  // di default (viso centrato, vedi CSS) e poi la sostituiamo con la foto reale
+  // dell'artista presa da TheAudioDB (getArtistInfo in common.js), se disponibile.
   const img = document.createElement("img");
   img.src = "assets/artist-default.jpeg";
   img.alt = "Artista " + artist.name;
   img.classList.add("artist-default-img");
   imageWrap.appendChild(img);
+
+  getArtistInfo(artist.name).then((info) => {
+    if (info && info.photo) {
+      img.src = info.photo;
+      img.classList.remove("artist-default-img"); // niente zoom sul default: foto reale intera
+    }
+  });
 
   const cardTitle = document.createElement("p");
   cardTitle.classList.add("card-title");

@@ -70,13 +70,17 @@ const loadArtist = async () => {
     coverWrap.classList.add("album-cover");
     artistHero.appendChild(coverWrap);
 
+    const img = document.createElement("img");
+    img.alt = artist.artistName;
+    // entity=musicArtist non dà artwork: usa la cover del primo brano se c'è,
+    // altrimenti l'immagine di default (solo iTunes, niente nuova API qui)
     if (tracks.length > 0 && tracks[0].artworkUrl100) {
-      const img = document.createElement("img");
       img.src = bigArt(tracks[0].artworkUrl100);
-      img.alt = artist.artistName;
-
-      coverWrap.appendChild(img);
+    } else {
+      img.src = "assets/artist-default.jpeg";
+      img.classList.add("artist-default-img");
     }
+    coverWrap.appendChild(img);
 
     const heroContent = document.createElement("div");
     heroContent.classList.add("hero-meta");
