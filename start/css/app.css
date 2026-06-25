@@ -16,9 +16,9 @@
   --text-primary: #ffffff;
   --text-secondary: #b3b3b3;
   --text-input: #000000;
-  --accent: #f7d800;        /* giallo Epicode */
+  --accent: #f7d800; /* giallo Epicode */
   --accent-dark: #d6ba00;
-  --success: #FD7803;       /* arancione "play" */
+  --success: #fd7803; /* arancione "play" */
   --danger: #e25555;
   --border: #2a2a2a;
   --radius-sm: 6px;
@@ -54,7 +54,9 @@ body {
   margin: 0;
   background: var(--bg-base);
   color: var(--text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
   font-size: 14px;
   overflow: hidden;
 }
@@ -213,10 +215,69 @@ button {
 }
 .user-pill {
   background: rgba(0, 0, 0, 0.6);
+  color: white;
   padding: 6px 12px;
   border-radius: 999px;
   font-weight: 600;
   font-size: 13px;
+}
+
+.no-logged {
+  display: flex;
+  gap: 8px;
+}
+
+.user-pill:last-child {
+  background-color: #fd7803;
+  color: black;
+}
+
+.user-pill:last-child:hover {
+  background-color: #d96400;
+  color: black;
+}
+
+.user-pill:hover {
+  background-color: rgba(46, 44, 44, 0.577);
+}
+
+.logged-user {
+  position: relative;
+}
+
+.user-dropdown {
+  position: absolute;
+  width: 100%;
+  right: 0;
+  top: 100%;
+  padding: 0;
+  list-style: none;
+  background-color: #d96400;
+  color: #000;
+  font-size: 13px;
+  border-radius: 0 0 16px 16px;
+  overflow: hidden;
+  transform-origin: top center;
+  transform: scaleY(0);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.user-dropdown.open {
+  transform: scaleY(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.user-dropdown li {
+  padding: 8px 14px;
+}
+
+.user-dropdown li:hover {
+  background-color: #fd7803;
 }
 
 /* ============================ Sezioni / Rows ============================ */
@@ -259,7 +320,9 @@ button {
   place-items: center;
   font-size: 18px;
   line-height: 1;
-  transition: background 0.18s ease, opacity 0.18s ease;
+  transition:
+    background 0.18s ease,
+    opacity 0.18s ease;
 }
 .row-arrow:hover {
   background: var(--bg-elev-hover);
@@ -363,8 +426,10 @@ button {
   box-shadow: var(--shadow);
   opacity: 0;
   transform: translateY(8px);
-  transition: opacity 0.2s, transform 0.2s;
-   padding: 0;
+  transition:
+    opacity 0.2s,
+    transform 0.2s;
+  padding: 0;
   line-height: 1;
   padding-left: 2px;
 }
@@ -607,7 +672,7 @@ button {
   color: var(--text-primary);
 }
 .btn-ctrl.btn-active {
-  color: #FD7803;
+  color: #fd7803;
 }
 .btn-play {
   width: 36px;
@@ -756,48 +821,6 @@ button {
   opacity: 1;
 }
 
-/* ============================ Filter Pills ============================ */
-
-.filter-pills {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  scrollbar-width: none;
-  margin-left: 12px;
-}
-.filter-pills::-webkit-scrollbar { display: none; }
-
-.filter-pill {
-  flex-shrink: 0;
-  padding: 5px 14px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--text-secondary);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-  white-space: nowrap;
-}
-.filter-pill:hover {
-  background: var(--bg-elev-hover);
-  color: var(--text-primary);
-}
-/* pill attiva (genere selezionato o "Tutti") */
-.filter-pill.active {
-  background: var(--text-primary);
-  color: var(--bg-base);
-  border-color: var(--text-primary);
-}
-/* pill ♥ attiva -> rossa */
-.filter-pill--fav.active {
-  background: var(--danger);
-  color: #fff;
-  border-color: var(--danger);
-}
 /* ============================ Responsive ============================ */
 
 @media (max-width: 800px) {
@@ -845,6 +868,120 @@ button {
   }
 }
 
+/* ============================ Modale di registrazione ============================ */
+.register-overlay {
+  position: fixed;
+  inset: 0;
+  display: none;
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+.register-overlay.open {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.register-box {
+  width: 90%;
+  max-width: 400px;
+  max-height: 80vh;
+  background-color: black;
+  padding: 40px;
+  border: 2px solid #fd7803;
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.register-close {
+  position: absolute;
+  top: -5px;
+  right: -3px;
+  width: 2.5rem;
+  height: 2.5rem;
+  font-weight: 600;
+  font-size: 13px;
+  background-color: #fd7803;
+  border: 2px solid #fd7803;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.register-field {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+.register-submit {
+  background: rgba(0, 0, 0, 0.6);
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 13px;
+  background-color: #fd7803;
+}
+/* ============================ Modale di registrazione ============================ */
+.register-overlay {
+  position: fixed;
+  inset: 0;
+  display: none;
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+.register-overlay.open {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.register-box {
+  width: 90%;
+  max-width: 400px;
+  max-height: 80vh;
+  background-color: black;
+  padding: 40px;
+  border: 2px solid #fd7803;
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.register-close {
+  position: absolute;
+  top: -5px;
+  right: -3px;
+  width: 2.5rem;
+  height: 2.5rem;
+  font-weight: 600;
+  font-size: 13px;
+  background-color: #fd7803;
+  border: 2px solid #fd7803;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.register-field {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+.register-submit {
+  background: rgba(0, 0, 0, 0.6);
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 13px;
+  background-color: #fd7803;
+}
 
 /* ============================ Pannello "In riproduzione" ============================ */
 
@@ -1035,14 +1172,13 @@ button {
 
 .brand {
   display: flex;
-  align-items: center;  
+  align-items: center;
   padding: 16px 8px 24px 8px;
   gap: 0;
-  
 }
 
 .brand-logo {
-  width: 40px;      
+  width: 40px;
   height: 45px;
   object-fit: contain;
   border-radius: 4px;

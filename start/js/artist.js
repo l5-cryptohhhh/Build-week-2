@@ -111,9 +111,30 @@ const loadArtist = async () => {
       btnPlayBig.classList.add("btn-play-big");
       btnPlayBig.textContent = "▶";
 
+      const audioEl = document.querySelector("#audio-element");
+
+      const syncBtnPlay = () => {
+        const isThisArtist = trackObjs.some(
+          (t) => t.id === player.currentTrack?.id,
+        );
+        btnPlayBig.textContent =
+          isThisArtist && !audioEl.paused ? "⏸" : "▶";
+      };
+
       btnPlayBig.addEventListener("click", () => {
-        player.setQueue(trackObjs, 0);
+        const isThisArtist = trackObjs.some(
+          (t) => t.id === player.currentTrack?.id,
+        );
+        if (isThisArtist) {
+          player.togglePlay();
+        } else {
+          player.setQueue(trackObjs, 0);
+        }
       });
+
+      audioEl.addEventListener("play", syncBtnPlay);
+      audioEl.addEventListener("pause", syncBtnPlay);
+      audioEl.addEventListener("ended", syncBtnPlay);
 
       heroActions.appendChild(btnPlayBig);
       heroContent.appendChild(heroActions);
