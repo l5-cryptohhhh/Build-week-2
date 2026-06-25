@@ -142,7 +142,6 @@ class Track {
     this.cover = raw.artworkUrl100;
     this.previewUrl = raw.previewUrl;
     this.durationMs = raw.trackTimeMillis;
-    this.genre = raw.primaryGenreName || "";
 
     // TODO: assegna alle property di this i valori da raw
     // (id, title, artist, album, albumId, artistId, cover, previewUrl, durationMs)
@@ -713,141 +712,259 @@ const setupCarousels = () => {
   }).observe(document.body, { childList: true, subtree: true });
 };
 
-/*Filtri solo HOME e SEARCH*/
+/* ============================ 6c. Pannello "In riproduzione" ============================ */
 
-/* activeGenre è il genere selezionato in questo momento.
-Inizia come null.
-Quando è (es)"Pop", diventa "Pop". Quando è "Tutti", è null.
-null significa semplicemente "nessun filtro attivo → mostra tutto"*/
-let activeGenre = null;
-// true = mostra solo i brani pref
-let showFavsOnly = false;
-
-// array per le pills grafiche
-const FILTER_GENRES = ["Pop", "Rock"];
 /*
-  APPLICARE FILTRI
-  - Se showFavsOnly è true: nasconde TUTTO tranne la row dei preferiti,
-    poi filtra per genere solo dentro quella row
-  - Se showFavsOnly è false: mostra tutte le row normalmente,
-    poi scorre tutte le .card con forEach e nasconde quelle che non soddisfano activeGenre
-  - Nasconde l'intera .row se non rimane nessuna card visibile
-    (controlla !row.hidden per non sovrascrivere le row già nascoste da home.js)
-  - Va chiamata ogni volta che cambiano i filtri O il contenuto delle griglie
+  createNowPlayingPanel()
+  - Crea un pannello laterale a destra che mostra info sul brano IN RIPRODUZIONE
+    (non quello cliccato) e sull'artista (fetch lookup iTunes).
+  - Niente innerHTML / textContent: si usano createElement + append(stringa)
+    (append con stringa crea automaticamente un nodo di testo) e replaceChildren.
+  - API: { show(track), open(), close(), toggle() }
 */
-const applyFilters = () => {
-  if (showFavsOnly) {
-    // modalità preferiti: nascondi TUTTO tranne la row dei preferiti
-    document.querySelectorAll(".row").forEach((row) => {
-      const isFavRow = row.dataset.rowType === "favourites";
-      row.style.display = isFavRow ? "" : "none";
-    });
 
-    // filtra per genere dentro la row dei preferiti
-    const favRow = document.querySelector(".row[data-row-type='favourites']");
-    if (favRow) {
-      favRow.querySelectorAll(".card").forEach((card) => {
-        const genreOk = !activeGenre || card.dataset.genre === activeGenre;
-        card.style.display = genreOk ? "" : "none";
-      });
+// imposta il testo di un elemento senza usare textContent/innerHTML
+const setText = (el, str) => {
+  el.replaceChildren();
+  el.append(str == null ? "" : String(str));
+};
+
+/*
+  getArtistInfo(name) -> { photo, bio, genre, formedYear }
+  - Cerca l'artista su TheAudioDB (foto + bio reali, non presenti su iTunes)
+  - Cache condivisa: usata sia dal pannello "In riproduzione" sia dalle card artista
+  - In caso di artista non trovato ritorna campi vuoti
+*/
+const audioDbCache = new Map();
+const getArtistInfo = async (name) => {
+  if (!name) return { photo: "", bio: "", genre: "", formedYear: "" };
+  if (audioDbCache.has(name)) return audioDbCache.get(name);
+
+  const photoOf = (a) => a.strArtistThumb || a.strArtistFanart || "";
+
+  const searchArtists = async (q) => {
+    const data = await fetchJSON(
+      `https://www.theaudiodb.com/api/v1/json/2/search.php?s=${encodeURIComponent(
+        q,
+      )}`,
+    );
+    return (data && data.artists) || [];
+  };
+
+  // nome ripulito da featuring/collaborazioni: "Snoop Dogg feat. Dr. Dre" -> "Snoop Dogg"
+  const cleanName = name
+    .split(/\s*(?:feat\.?|ft\.?|featuring|&|,|\/|\bx\b|with)\s+/i)[0]
+    .trim();
+
+  let artists = await searchArtists(name);
+  if (!artists.length && cleanName && cleanName !== name) {
+    artists = await searchArtists(cleanName);
+  }
+  // tra più risultati scegli il primo CHE HA una foto (evita duplicati vuoti);
+  // se nessuno ha foto, ripiega sul primo
+  const raw = artists.find((a) => photoOf(a)) || artists[0] || null;
+  const info = raw
+    ? {
+        photo: photoOf(raw),
+        bio: raw.strBiographyEN || "",
+        genre: raw.strGenre || "",
+        formedYear: raw.intFormedYear || "",
+      }
+    : { photo: "", bio: "", genre: "", formedYear: "" };
+  audioDbCache.set(name, info);
+  return info;
+};
+
+const createNowPlayingPanel = () => {
+  // evita doppioni se initPage viene chiamato più volte
+  const existing = document.querySelector("#now-playing");
+  if (existing) existing.remove();
+
+  const panel = document.createElement("aside");
+  panel.classList.add("now-playing");
+  panel.id = "now-playing";
+
+  // --- Header: nome artista + chiudi ---
+  const header = document.createElement("div");
+  header.classList.add("np-header");
+
+  const headerTitle = document.createElement("span");
+  headerTitle.classList.add("np-header-title");
+  setText(headerTitle, "In riproduzione");
+
+  const btnClose = document.createElement("button");
+  btnClose.classList.add("np-close");
+  btnClose.setAttribute("aria-label", "Chiudi");
+  setText(btnClose, "✕");
+
+  header.appendChild(headerTitle);
+  header.appendChild(btnClose);
+
+  // --- Cover grande ---
+  const coverWrap = document.createElement("div");
+  coverWrap.classList.add("np-cover");
+  const coverImg = document.createElement("img");
+  coverImg.alt = "";
+  coverWrap.appendChild(coverImg);
+
+  // --- Titolo + artista ---
+  const title = document.createElement("h2");
+  title.classList.add("np-title");
+
+  const artist = document.createElement("p");
+  artist.classList.add("np-artist");
+
+  // --- Info brano (album, durata) ---
+  const trackInfo = document.createElement("div");
+  trackInfo.classList.add("np-info");
+
+  const makeInfoRow = (label) => {
+    const row = document.createElement("div");
+    row.classList.add("np-info-row");
+    const k = document.createElement("span");
+    k.classList.add("np-info-key");
+    setText(k, label);
+    const v = document.createElement("span");
+    v.classList.add("np-info-val");
+    row.appendChild(k);
+    row.appendChild(v);
+    trackInfo.appendChild(row);
+    return v;
+  };
+
+  const valAlbum = makeInfoRow("Album");
+  const valYear = makeInfoRow("Anno");
+  const valGenre = makeInfoRow("Genere");
+  const valDuration = makeInfoRow("Durata");
+
+  // --- Sezione artista ---
+  const about = document.createElement("section");
+  about.classList.add("np-about");
+
+  const aboutTitle = document.createElement("h3");
+  setText(aboutTitle, "Sull'artista");
+
+  const aboutImg = document.createElement("img");
+  aboutImg.classList.add("np-about-img");
+  aboutImg.alt = "";
+  aboutImg.hidden = true;
+
+  const aboutName = document.createElement("p");
+  aboutName.classList.add("np-about-name");
+
+  const aboutGenre = document.createElement("p");
+  aboutGenre.classList.add("np-about-genre");
+
+  const aboutBio = document.createElement("p");
+  aboutBio.classList.add("np-about-bio");
+
+  about.appendChild(aboutTitle);
+  about.appendChild(aboutImg);
+  about.appendChild(aboutName);
+  about.appendChild(aboutGenre);
+  about.appendChild(aboutBio);
+
+  panel.appendChild(header);
+  panel.appendChild(coverWrap);
+  panel.appendChild(title);
+  panel.appendChild(artist);
+  panel.appendChild(trackInfo);
+  panel.appendChild(about);
+  document.body.appendChild(panel);
+
+  // cache per non rifetchare gli stessi dati
+  const itunesCache = new Map(); // chiave: trackId  -> { year, genre }
+
+  // brano corrente ancora valido? (evita di scrivere dati di un brano vecchio)
+  const stillCurrent = (track) =>
+    window.player && window.player.currentTrack === track;
+
+  // --- iTunes: anno + genere del brano (lookup per trackId) ---
+  const enrichItunes = async (track) => {
+    setText(valYear, "—");
+    setText(valGenre, "—");
+    if (!track.id) return;
+
+    if (itunesCache.has(track.id)) {
+      const c = itunesCache.get(track.id);
+      setText(valYear, c.year || "—");
+      setText(valGenre, c.genre || "—");
+      return;
     }
 
-  } else {
-    // modalità normale: mostra tutte le row (tranne quelle già hidden da home.js)
-    document.querySelectorAll(".row").forEach((row) => {
-      if (!row.hidden) row.style.display = "";
-    });
+    const data = await fetchJSON(`${API_BASE}/lookup?id=${track.id}`);
+    const raw = (data.results || []).find((r) => r.trackId);
+    const info = {
+      year: raw && raw.releaseDate ? raw.releaseDate.slice(0, 4) : "",
+      genre: raw ? raw.primaryGenreName : "",
+    };
+    itunesCache.set(track.id, info);
 
-    // scorre tutte le .card con forEach e nasconde quelle che non soddisfano activeGenre
-    document.querySelectorAll(".row").forEach((row) => {
-      if (row.hidden) return;
-      const cards = row.querySelectorAll(".card");
-      let visible = 0;
-      cards.forEach((card) => {
-        const genreOk = !activeGenre || card.dataset.genre === activeGenre;
-        card.style.display = genreOk ? "" : "none";
-        if (genreOk) visible++;
-      });
-      // nasconde la row intera se non ha card visibili
-      row.style.display = visible === 0 ? "none" : "";
-    });
-  }
-};
-//RENDERIZZAZIONE: costruisce e inserisce fisicamente le pills nel DOM della topbar
-/*
-  renderFilterPills(activePage)
-  1 Inietta le pills nella .topbar-nav (accanto alle frecce ‹ ›)
-  2 La pill Preferiti appare solo su home e search
-  3 Chiamata da initPage solo per "home" e "search"
-*/
-const renderFilterPills = (activePage) => {
-  const topbarNav = document.querySelector(".topbar-nav");
-  if (!topbarNav) return;
+    if (stillCurrent(track)) {
+      setText(valYear, info.year || "—");
+      setText(valGenre, info.genre || "—");
+    }
+  };
 
-  const bar = document.createElement("div");
-  bar.classList.add("filter-pills");
-  bar.id = "filter-pills-main"; // id per poterla ritrovare dopo
+  // --- TheAudioDB: foto + bio artista (search per nome) ---
+  const enrichArtist = async (track) => {
+    aboutImg.hidden = true;
+    setText(aboutName, track.artist || "—");
+    setText(aboutGenre, "");
+    setText(aboutBio, "Caricamento info artista…");
+    setText(headerTitle, track.artist || "In riproduzione");
 
-  // --- Pill "Tutti" ---
-  const pillAll = document.createElement("button");
-  pillAll.classList.add("filter-pill", "active");
-  pillAll.textContent = "Tutti";
-  // evento
-  pillAll.addEventListener("click", () => {
-    activeGenre = null;
-    bar.querySelectorAll(".filter-pill[data-genre]").forEach((p) =>
-      p.classList.remove("active")
-    );
-    pillAll.classList.add("active");
-    applyFilters();
-  });
-  bar.appendChild(pillAll);
+    const name = track.artist;
+    if (!name) {
+      setText(aboutBio, "");
+      return;
+    }
 
-
-
-  // --- Pills generi ---
-  FILTER_GENRES.forEach((genre) => {
-    const pill = document.createElement("button");
-    pill.classList.add("filter-pill");
-    pill.dataset.genre = genre;
-    pill.textContent = genre;
-    // evento
-    pill.addEventListener("click", () => {
-      if (activeGenre === genre) {
-        // secondo click sullo stesso genere -> deseleziona
-        activeGenre = null;
-        pill.classList.remove("active");
-        pillAll.classList.add("active");
+    const applyInfo = (info) => {
+      if (!stillCurrent(track)) return;
+      setText(aboutName, name);
+      aboutImg.hidden = false;
+      if (info.photo) {
+        aboutImg.src = info.photo;
+        aboutImg.classList.remove("is-default");
       } else {
-        activeGenre = genre;
-        bar.querySelectorAll(".filter-pill").forEach((p) => p.classList.remove("active"));
-        pill.classList.add("active");
+        aboutImg.src = "assets/artist-default.jpeg";
+        aboutImg.classList.add("is-default");
       }
-      applyFilters();
-    });
-    bar.appendChild(pill);
-  });
+      const meta = [info.genre, info.formedYear].filter(Boolean).join(" · ");
+      setText(aboutGenre, meta);
+      setText(aboutBio, info.bio || "Nessuna biografia disponibile.");
+    };
 
-  if (activePage === "home") {
-    const pillFav = document.createElement("button");
-    pillFav.classList.add("filter-pill", "filter-pill--fav");
-    pillFav.textContent = "Preferiti";
-pillFav.addEventListener("click", () => {
-  showFavsOnly = !showFavsOnly;
-  pillFav.classList.toggle("active", showFavsOnly);
+    const info = await getArtistInfo(name);
+    applyInfo(info);
+  };
 
-  // disabilita/riabilita le pills Tutti, Pop, Rock
-  bar.querySelectorAll(".filter-pill:not(.filter-pill--fav)").forEach((p) => {
-    p.disabled = showFavsOnly;
-    p.style.opacity = showFavsOnly ? "0.35" : "";
-  });
+  const render = (track) => {
+    if (!track) return;
+    coverImg.src = bigArt(track.cover) || track.cover || "";
+    coverImg.alt = track.title || "";
+    setText(title, track.title || "—");
+    setText(artist, track.artist || "—");
+    setText(valAlbum, track.album || "—");
+    setText(valDuration, formatTime(track.durationMs));
+    setText(headerTitle, track.artist || "In riproduzione");
+    enrichItunes(track);
+    enrichArtist(track);
+  };
 
-  applyFilters();
-});
-    bar.appendChild(pillFav);
-  }
+  const open = () => panel.classList.add("is-open");
+  const close = () => panel.classList.remove("is-open");
+  const toggle = () => panel.classList.toggle("is-open");
 
-  topbarNav.appendChild(bar);
+  const show = (track) => {
+    render(track);
+    open();
+  };
+
+  btnClose.addEventListener("click", close);
+
+  return { show, open, close, toggle, render };
 };
 
 /* ============================ 7. Inizializzazione ============================ */
@@ -881,9 +998,6 @@ const initPage = (activePage) => {
   if (btnForward) btnForward.addEventListener("click", () => history.forward());
 
   setupCarousels();
-//CHIAMA RENDER PILLS perchè initPage è la funzione che viene chiamata per prima su ogni pagina 
-if (activePage === "home") {
-  renderFilterPills(activePage);
-}
+
   return player;
 };
