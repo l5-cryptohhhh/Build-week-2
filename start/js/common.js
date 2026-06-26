@@ -1047,16 +1047,20 @@ const pillDropdown = () => {
   const pillUtente = userLogged.querySelector(".user-pill");
   const dropdown = document.querySelector(".user-dropdown");
   const [profilo, esci] = dropdown.querySelectorAll("li");
-
+  // apertura
   pillUtente.addEventListener("click", (e) => {
     dropdown.classList.toggle("open");
     e.stopPropagation();
   });
-
+  // chiusura pill
   document.addEventListener("click", (e) => {
     dropdown.classList.remove("open");
   });
-
+  // click profilo
+  profilo.addEventListener("click", (e) => {
+    window.location.href = "profile.html";
+  });
+  // click logout
   esci.addEventListener("click", (e) => {
     logoutUser();
     renderUserPill();
