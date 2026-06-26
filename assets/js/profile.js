@@ -50,6 +50,7 @@ if (account === null) {
       // creazione elementi preferiti
       const trackRow = document.createElement("div");
       trackRow.classList.add("track-row");
+      trackRow.dataset.trackId = track.id;
 
       const trackNum = document.createElement("span");
       trackNum.classList.add("track-num");
@@ -102,11 +103,14 @@ if (account === null) {
       trackFav.innerHTML = '<i class="bi bi-check-circle-fill"></i>';
 
       trackFav.addEventListener("click", (e) => {
+        e.stopPropagation();
         toggleFavourite(track);
         renderFavs();
       });
 
       trackRow.appendChild(trackFav);
+
+      trackRow.addEventListener("click", () => player.setQueue(preferitiRandom, index));
     });
   };
 
@@ -141,9 +145,10 @@ if (account === null) {
 
     suggestionsCarousel.appendChild(divCarousel);
 
-    brani.forEach((track) => {
+    brani.forEach((track, index) => {
       const card = document.createElement("div");
       card.classList.add("card");
+      card.dataset.trackId = track.id;
 
       const imageWrap = document.createElement("div");
       imageWrap.classList.add("card-image-wrap");
@@ -163,6 +168,9 @@ if (account === null) {
       artista.classList.add("card-sub");
       artista.textContent = track.artist;
       card.appendChild(artista);
+
+      card.style.cursor = "pointer";
+      card.addEventListener("click", () => player.setQueue(brani, index));
 
       divCarousel.appendChild(card);
     });
