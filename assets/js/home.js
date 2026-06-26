@@ -65,6 +65,9 @@ const makeCard = (track, index, tracks) => {
   img.alt = track.title;
   imgWrap.appendChild(img);
 
+  const titleRow = document.createElement("div");
+  titleRow.classList.add("card-title-row");
+
   const pTitle = document.createElement("p");
   pTitle.classList.add("card-title");
   pTitle.textContent = track.title;
@@ -74,7 +77,7 @@ const makeCard = (track, index, tracks) => {
   pArtist.textContent = track.artist;
 
   card.appendChild(imgWrap);
-  card.appendChild(pTitle);
+  card.appendChild(titleRow);
   card.appendChild(pArtist);
 
   card.addEventListener("click", () => {
@@ -103,24 +106,29 @@ const makeCard = (track, index, tracks) => {
   });
   card.appendChild(btnPlay);
 
+  const setFavIcon = (btn, isFav) => {
+    btn.innerHTML = isFav
+      ? '<i class="bi bi-check-circle-fill"></i>'
+      : '<i class="bi bi-plus-circle"></i>';
+  };
+
   const btnFav = document.createElement("button");
   btnFav.classList.add("card-fav");
-  btnFav.textContent = "♥"; // sempre ♥: il CSS lo nasconde se non è preferito
-  btnFav.dataset.trackId = track.id; // serve per aggiornare TUTTI i cuori dello stesso brano
-  // stato iniziale: rosso e visibile se già nei preferiti
-  btnFav.classList.toggle("is-fav", isFavourite(track.id));
+  btnFav.dataset.trackId = track.id;
+  const initFav = isFavourite(track.id);
+  btnFav.classList.toggle("is-fav", initFav);
+  setFavIcon(btnFav, initFav);
 
   btnFav.addEventListener("click", (e) => {
     e.stopPropagation();
-    toggleFavourite(track); // -> library:changed -> refreshAllHearts aggiorna ogni cuore
-    // inline opacity batte :hover -> questa card sparisce SUBITO anche col mouse sopra
-    if (!isFavourite(track.id)) btnFav.style.opacity = "0";
+    toggleFavourite(track);
+    const fav = isFavourite(track.id);
+    btnFav.classList.toggle("is-fav", fav);
+    setFavIcon(btnFav, fav);
   });
-  // mouse fuori dalla card -> ridai il controllo al CSS (hover ri-mostra ♥ per aggiungere)
-  card.addEventListener("mouseleave", () => {
-    btnFav.style.opacity = "";
-  });
-  card.appendChild(btnFav);
+
+  titleRow.appendChild(pTitle);
+  titleRow.appendChild(btnFav);
 
   return card;
 };
@@ -290,7 +298,10 @@ const refreshAllHearts = () => {
   document.querySelectorAll(".card-fav").forEach((btn) => {
     const fav = isFavourite(Number(btn.dataset.trackId));
     btn.classList.toggle("is-fav", fav);
-    btn.style.opacity = ""; // ridai il controllo al CSS (hover/is-fav)
+    btn.style.opacity = "";
+    btn.innerHTML = fav
+      ? '<i class="bi bi-check-circle-fill"></i>'
+      : '<i class="bi bi-plus-circle"></i>';
   });
 };
 

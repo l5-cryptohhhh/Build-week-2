@@ -469,27 +469,33 @@ button {
   transform: translateY(0);
 }
 
+.card-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-width: 0;
+}
+.card-title-row .card-title {
+  flex: 1;
+  min-width: 0;
+}
 .card-fav {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.5);
-  color: #fff;
+  background: transparent;
   border: none;
-  font-size: 16px;
-  display: grid;
-  place-items: center;
+  color: var(--text-secondary);
+  font-size: 18px;
+  flex-shrink: 0;
+  padding: 2px 4px;
   opacity: 0;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s, color 0.2s;
 }
 .card:hover .card-fav {
   opacity: 1;
 }
 .card-fav.is-fav {
-  color: var(--danger);
+  color: var(--success);
+  opacity: 1;
 }
 
 /* ============================ Hero album / artista ============================= */
@@ -966,6 +972,9 @@ button {
   }
   .row-arrows {
     display: none !important;
+  }
+  .card-fav {
+    opacity: 1;
   }
 
   /* Barra di navigazione mobile */
