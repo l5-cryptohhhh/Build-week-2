@@ -75,7 +75,7 @@ const loadArtist = async () => {
     if (tracks.length > 0 && tracks[0].artworkUrl100) {
       img.src = bigArt(tracks[0].artworkUrl100);
     } else {
-      img.src = "assets/artist-default.jpeg";
+      img.src = "assets/img/artist-default.jpeg";
       img.classList.add("artist-default-img");
     }
     coverWrap.appendChild(img);
@@ -107,7 +107,7 @@ const loadArtist = async () => {
 
       const btnPlayBig = document.createElement("button");
       btnPlayBig.classList.add("btn-play-big");
-      btnPlayBig.textContent = "▶";
+      btnPlayBig.textContent = ICON_PLAY;
 
       const audioEl = document.querySelector("#audio-element");
 
@@ -116,7 +116,7 @@ const loadArtist = async () => {
           (t) => t.id === player.currentTrack?.id,
         );
         btnPlayBig.textContent =
-          isThisArtist && !audioEl.paused ? "⏸" : "▶";
+          isThisArtist && !audioEl.paused ? ICON_PAUSE : ICON_PLAY;
       };
 
       btnPlayBig.addEventListener("click", () => {

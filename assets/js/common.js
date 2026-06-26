@@ -59,6 +59,10 @@
 /* ============================ 1. Costanti ============================ */
 
 const API_BASE = "https://itunes.apple.com";
+// Play/pausa: glifo + variation selector U+FE0E -> forza la resa "testo"
+// invece dell'emoji colorata che i telefoni mostrano di default.
+const ICON_PLAY = "▶︎"; // ▶
+const ICON_PAUSE = "⏸︎"; // ⏸
 const STORAGE_KEY_HISTORY = "epitunes_history";
 const STORAGE_KEY_FAVOURITES = "epitunes_favourites";
 const STORAGE_KEY_LAST_SEARCH = "epitunes_last_search";
@@ -271,7 +275,7 @@ class Player {
         <div class="player-controls">
           <button class="btn-ctrl" id="btn-shuffle" aria-label="Shuffle"><i class="bi bi-shuffle"></i></button>
           <button class="btn-ctrl" id="btn-prev"    aria-label="Precedente">⏮</button>
-          <button class="btn-play" id="btn-toggle"  aria-label="Play/Pausa">▶</button>
+          <button class="btn-play" id="btn-toggle"  aria-label="Play/Pausa">${ICON_PLAY}</button>
           <button class="btn-ctrl" id="btn-next"    aria-label="Successivo">⏭</button>
           <button class="btn-ctrl" id="btn-repeat"  aria-label="Ripeti"><i class="bi bi-repeat"></i></button>
         </div>
@@ -363,7 +367,7 @@ class Player {
         if (this._wasPlaying) {
           this.audio.play().catch(() => {});
           this.isPlaying = true;
-          if (this.elBtnToggle) this.elBtnToggle.textContent = "⏸";
+          if (this.elBtnToggle) this.elBtnToggle.textContent = ICON_PAUSE;
         }
       });
     }
@@ -400,6 +404,9 @@ class Player {
     footer.addEventListener("touchend", (e) => {
       const deltaX = e.changedTouches[0].clientX - playerSwipeStartX;
       if (Math.abs(deltaX) < 60) return;
+      // è stato uno swipe: impedisci che il click successivo apra il pannello
+      this._justSwiped = true;
+      setTimeout(() => { this._justSwiped = false; }, 350);
       if (deltaX < 0) this.playNext();
       else this.playPrev();
     }, { passive: true });
@@ -455,7 +462,7 @@ class Player {
     if (this.elTimeTotal)
       this.elTimeTotal.textContent = formatTime(track.durationMs);
     if (this.elBtnToggle)
-      this.elBtnToggle.textContent = this.isPlaying ? "⏸" : "▶";
+      this.elBtnToggle.textContent = this.isPlaying ? ICON_PAUSE : ICON_PLAY;
 
     // 5) salva in cronologia
     addToHistory(track);
@@ -497,7 +504,7 @@ class Player {
       this.isPlaying = false;
     }
     if (this.elBtnToggle)
-      this.elBtnToggle.textContent = this.isPlaying ? "⏸" : "▶";
+      this.elBtnToggle.textContent = this.isPlaying ? ICON_PAUSE : ICON_PLAY;
     // TODO: alterna play/pause + aggiorna icona del button
   }
 
@@ -730,7 +737,7 @@ const renderSidebar = (activePage) => {
   if (!sidebar) return;
   sidebar.innerHTML = `
     <a href="index.html" class="brand">
-      <img src="assets/Nuovo_Logo.png" alt="EpiTunes Logo" class="brand-logo" />
+      <img src="assets/img/Nuovo_Logo.png" alt="EpiTunes Logo" class="brand-logo" />
       <span class="brand-text">usiCode</span>
     </a>
     <nav class="sidebar-nav">
@@ -946,7 +953,7 @@ const createNowPlayingPanel = () => {
   const npBtnToggle = document.createElement("button");
   npBtnToggle.className = "btn-play";
   npBtnToggle.setAttribute("aria-label", "Play/Pausa");
-  npBtnToggle.textContent = "▶";
+  npBtnToggle.textContent = ICON_PLAY;
 
   const npBtnNext = document.createElement("button");
   npBtnNext.className = "btn-ctrl";
@@ -967,7 +974,7 @@ const createNowPlayingPanel = () => {
   const npAudio = p.audio;
 
   const syncNpPlay = () => {
-    npBtnToggle.textContent = npAudio.paused ? "▶" : "⏸";
+    npBtnToggle.textContent = npAudio.paused ? ICON_PLAY : ICON_PAUSE;
   };
 
   npAudio.addEventListener("timeupdate", () => {
@@ -1013,7 +1020,7 @@ const createNowPlayingPanel = () => {
     if (p._wasPlaying) {
       npAudio.play().catch(() => {});
       p.isPlaying = true;
-      npBtnToggle.textContent = "⏸";
+      npBtnToggle.textContent = ICON_PAUSE;
     }
   });
 
@@ -1139,7 +1146,7 @@ const createNowPlayingPanel = () => {
         aboutImg.src = info.photo;
         aboutImg.classList.remove("is-default");
       } else {
-        aboutImg.src = "assets/artist-default.jpeg";
+        aboutImg.src = "assets/img/artist-default.jpeg";
         aboutImg.classList.add("is-default");
       }
       const meta = [info.genre, info.formedYear].filter(Boolean).join(" · ");
@@ -1389,6 +1396,7 @@ const initPage = (activePage) => {
   if (playerFooter) {
     playerFooter.addEventListener("click", (e) => {
       if (window.innerWidth > 576) return;
+      if (player._justSwiped) return; // appena fatto uno swipe -> non aprire il pannello
       if (
         e.target.closest(".player-progress") ||
         e.target.closest(".btn-play") ||

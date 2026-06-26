@@ -560,6 +560,11 @@ button {
   color: #000;
   border: none;
   font-size: 24px;
+  display: grid;
+  place-items: center;
+  line-height: 1;
+  padding: 0;
+  padding-left: 3px; /* offset ottico del ▶, centrato come nelle card */
 }
 .btn-fav-big {
   width: 36px;
@@ -910,6 +915,9 @@ button {
       "sidebar main"
       "player  player"
       "mobile-nav mobile-nav";
+    /* 100dvh = altezza viewport REALE su mobile (esclude barre browser):
+       evita che la mobile-nav finisca fuori schermo / coperta */
+    height: 100dvh;
   }
   .sidebar {
     display: none;

@@ -53,7 +53,7 @@ const renderTrackCard = (track) => {
   cardSub.textContent = track.artist;
 
   const cardPlay = document.createElement("button");
-  cardPlay.textContent = "▶";
+  cardPlay.textContent = ICON_PLAY;
   cardPlay.classList.add("card-play");
 
   // Click su tutta la card (non solo sul bottone ▶) per riprodurre il brano:
@@ -130,7 +130,7 @@ const renderArtistCard = (artist) => {
   // di default (viso centrato, vedi CSS) e poi la sostituiamo con la foto reale
   // dell'artista presa da TheAudioDB (getArtistInfo in common.js), se disponibile.
   const img = document.createElement("img");
-  img.src = "assets/artist-default.jpeg";
+  img.src = "assets/img/artist-default.jpeg";
   img.alt = "Artista " + artist.name;
   img.classList.add("artist-default-img");
   imageWrap.appendChild(img);

@@ -37,7 +37,7 @@ const renderFavourites = () => {
   if (favs.length > 0) {
     const btnPlay = document.createElement("button");
     btnPlay.classList.add("btn-play-big");
-    btnPlay.textContent = "▶";
+    btnPlay.textContent = ICON_PLAY;
     btnPlay.addEventListener("click", () => player.setQueue(favs, 0));
     actions.appendChild(btnPlay);
   }
