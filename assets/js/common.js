@@ -1359,6 +1359,8 @@ const loginModal = () => {
     }
 
     renderUserPill();
+    renderSidebarFavs();
+    document.dispatchEvent(new CustomEvent("library:changed"));
     loginOverlay.classList.remove("open");
     loginForm.reset();
   });
