@@ -1314,7 +1314,6 @@ button {
 #profile-hero {
   display: flex;
   gap: 10px;
-  max-height: 30vh;
   background: #ababab;
   background: linear-gradient(
     180deg,
@@ -1398,4 +1397,85 @@ button {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+@media (max-width: 800px) {
+  /* Hero profilo: foto e titolo ridotti per schermi medi */
+  .profile-foto {
+    width: 130px;
+    height: 130px;
+    margin: 14px;
+  }
+
+  .profile-foto i {
+    font-size: 4.5rem;
+  }
+
+  .div-info h1 {
+    font-size: 2.8rem;
+  }
+
+  /* Tracklist: nascondi la colonna album, griglia più stretta */
+  #profile-favs .track-row {
+    grid-template-columns: 32px 32px 1fr 60px 32px;
+  }
+
+  #profile-favs .track-album {
+    display: none;
+  }
+
+  #profile-favs .track-time {
+    grid-column: 4;
+  }
+
+  #profile-favs .track-fav {
+    grid-column: 5;
+  }
+}
+
+@media (max-width: 576px) {
+  /* Hero profilo: colonna centrata, dimensioni ridotte */
+  #profile-hero {
+    flex-direction: column;
+    align-items: center;
+    max-height: none;
+    padding-bottom: 16px;
+    gap: 8px;
+  }
+
+  .profile-foto {
+    width: 100px;
+    height: 100px;
+    margin: 16px 0 0 0;
+  }
+
+  .profile-foto i {
+    font-size: 3.5rem;
+  }
+
+  .div-info {
+    align-items: center;
+    text-align: center;
+  }
+
+  .div-info h1 {
+    font-size: 1.8rem;
+  }
+
+  /* Tracklist preferiti: griglia semplificata, nascondi album e tempo */
+  #profile-favs .track-row {
+    grid-template-columns: 32px 32px 1fr 32px;
+  }
+
+  #profile-favs .track-album {
+    display: none;
+  }
+
+  #profile-favs .track-time {
+    display: none;
+  }
+
+  #profile-favs .track-fav {
+    grid-column: 4;
+  }
 }
