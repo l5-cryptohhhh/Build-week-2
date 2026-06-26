@@ -42,7 +42,7 @@ const loadTrack = async () => {
 
   const btnPlay = document.createElement("button");
   btnPlay.classList.add("btn-play-big");
-  btnPlay.textContent = "▶";
+  btnPlay.textContent = ICON_PLAY;
   btnPlay.addEventListener("click", () => player.setQueue([track], 0));
 
   const btnFav = document.createElement("button");

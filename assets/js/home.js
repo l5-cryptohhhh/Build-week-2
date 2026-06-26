@@ -87,18 +87,18 @@ const makeCard = (track, index, tracks) => {
 
   const btnPlay = document.createElement("button");
   btnPlay.classList.add("card-play");
-  btnPlay.textContent = "▶";
+  btnPlay.textContent = ICON_PLAY;
   btnPlay.addEventListener("click", (e) => {
     e.stopPropagation();
     if (player.currentTrack && player.currentTrack.id === track.id) {
       player.togglePlay();
-      btnPlay.textContent = player.isPlaying ? "⏸" : "▶";
+      btnPlay.textContent = player.isPlaying ? ICON_PAUSE : ICON_PLAY;
     } else {
       document
         .querySelectorAll(".card-play")
-        .forEach((btn) => (btn.textContent = "▶"));
+        .forEach((btn) => (btn.textContent = ICON_PLAY));
       player.setQueue(tracks, index);
-      btnPlay.textContent = "⏸";
+      btnPlay.textContent = ICON_PAUSE;
     }
   });
   card.appendChild(btnPlay);

@@ -53,7 +53,7 @@ const renderTrackCard = (track) => {
   cardSub.textContent = track.artist;
 
   const cardPlay = document.createElement("button");
-  cardPlay.textContent = "▶";
+  cardPlay.textContent = ICON_PLAY;
   cardPlay.classList.add("card-play");
 
   // Click su tutta la card (non solo sul bottone ▶) per riprodurre il brano:
