@@ -99,7 +99,7 @@ if (account === null) {
 
       const trackFav = document.createElement("button");
       trackFav.classList.add("track-fav", "is-fav");
-      trackFav.textContent = "♥";
+      trackFav.innerHTML = '<i class="bi bi-check-circle-fill"></i>';
 
       trackFav.addEventListener("click", (e) => {
         toggleFavourite(track);
