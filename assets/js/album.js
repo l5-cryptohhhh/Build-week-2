@@ -78,13 +78,13 @@ const loadAlbum = async () => {
 
   const btnPlay = document.createElement("button");
   btnPlay.classList.add("btn-play-big");
-  btnPlay.textContent = "▶";
+  btnPlay.textContent = ICON_PLAY;
 
   const audioEl = document.querySelector("#audio-element");
 
   const syncBtnPlay = () => {
     const isThisAlbum = tracks.some((t) => t.id === player.currentTrack?.id);
-    btnPlay.textContent = isThisAlbum && !audioEl.paused ? "⏸" : "▶";
+    btnPlay.textContent = isThisAlbum && !audioEl.paused ? ICON_PAUSE : ICON_PLAY;
   };
 
   btnPlay.addEventListener("click", () => {

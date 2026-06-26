@@ -32,6 +32,20 @@ const getTopArtists = () => {
     .slice(0, 3);
 };
 
+const getTopGenres = () => {
+  const all = [...getHistory(), ...getFavourites()];
+  const counts = {};
+
+  all.forEach((track) => {
+    if (!track.genre) return;
+    counts[track.genre] = (counts[track.genre] || 0) + 1;
+  });
+
+  return Object.keys(counts)
+    .sort((a, b) => counts[b] - counts[a])
+    .slice(0, 3);
+};
+
 const home = document.querySelector(".home");
 
 /*
@@ -51,6 +65,9 @@ const makeCard = (track, index, tracks) => {
   img.alt = track.title;
   imgWrap.appendChild(img);
 
+  const titleRow = document.createElement("div");
+  titleRow.classList.add("card-title-row");
+
   const pTitle = document.createElement("p");
   pTitle.classList.add("card-title");
   pTitle.textContent = track.title;
@@ -60,7 +77,7 @@ const makeCard = (track, index, tracks) => {
   pArtist.textContent = track.artist;
 
   card.appendChild(imgWrap);
-  card.appendChild(pTitle);
+  card.appendChild(titleRow);
   card.appendChild(pArtist);
 
   card.addEventListener("click", () => {
@@ -73,40 +90,45 @@ const makeCard = (track, index, tracks) => {
 
   const btnPlay = document.createElement("button");
   btnPlay.classList.add("card-play");
-  btnPlay.textContent = "▶";
+  btnPlay.textContent = ICON_PLAY;
   btnPlay.addEventListener("click", (e) => {
     e.stopPropagation();
     if (player.currentTrack && player.currentTrack.id === track.id) {
       player.togglePlay();
-      btnPlay.textContent = player.isPlaying ? "⏸" : "▶";
+      btnPlay.textContent = player.isPlaying ? ICON_PAUSE : ICON_PLAY;
     } else {
       document
         .querySelectorAll(".card-play")
-        .forEach((btn) => (btn.textContent = "▶"));
+        .forEach((btn) => (btn.textContent = ICON_PLAY));
       player.setQueue(tracks, index);
-      btnPlay.textContent = "⏸";
+      btnPlay.textContent = ICON_PAUSE;
     }
   });
   card.appendChild(btnPlay);
 
+  const setFavIcon = (btn, isFav) => {
+    btn.innerHTML = isFav
+      ? '<i class="bi bi-check-circle-fill"></i>'
+      : '<i class="bi bi-plus-circle"></i>';
+  };
+
   const btnFav = document.createElement("button");
   btnFav.classList.add("card-fav");
-  btnFav.textContent = "♥"; // sempre ♥: il CSS lo nasconde se non è preferito
-  btnFav.dataset.trackId = track.id; // serve per aggiornare TUTTI i cuori dello stesso brano
-  // stato iniziale: rosso e visibile se già nei preferiti
-  btnFav.classList.toggle("is-fav", isFavourite(track.id));
+  btnFav.dataset.trackId = track.id;
+  const initFav = isFavourite(track.id);
+  btnFav.classList.toggle("is-fav", initFav);
+  setFavIcon(btnFav, initFav);
 
   btnFav.addEventListener("click", (e) => {
     e.stopPropagation();
-    toggleFavourite(track); // -> library:changed -> refreshAllHearts aggiorna ogni cuore
-    // inline opacity batte :hover -> questa card sparisce SUBITO anche col mouse sopra
-    if (!isFavourite(track.id)) btnFav.style.opacity = "0";
+    toggleFavourite(track);
+    const fav = isFavourite(track.id);
+    btnFav.classList.toggle("is-fav", fav);
+    setFavIcon(btnFav, fav);
   });
-  // mouse fuori dalla card -> ridai il controllo al CSS (hover ri-mostra ♥ per aggiungere)
-  card.addEventListener("mouseleave", () => {
-    btnFav.style.opacity = "";
-  });
-  card.appendChild(btnFav);
+
+  titleRow.appendChild(pTitle);
+  titleRow.appendChild(btnFav);
 
   return card;
 };
@@ -191,9 +213,14 @@ const loadHome = async () => {
 
   if (topArtists.length > 0) {
     const fetches = topArtists.flatMap((artist) => [
-      fetchJSON(`${API_BASE}/search?term=${encodeURIComponent(artist)}&entity=song&limit=12`),
-      fetchJSON(`${API_BASE}/search?term=${encodeURIComponent(artist)}&entity=album&limit=8`),
+      fetchJSON(
+        `${API_BASE}/search?term=${encodeURIComponent(artist)}&entity=song&limit=12`,
+      ),
+      fetchJSON(
+        `${API_BASE}/search?term=${encodeURIComponent(artist)}&entity=album&limit=8`,
+      ),
     ]);
+
 
     const results = await Promise.all(fetches);
 
@@ -209,8 +236,29 @@ const loadHome = async () => {
 
       if (albums.length > 0) {
         const rowAlbums = makeRow(`Album di ${artist}`);
-        albums.forEach((album) => rowAlbums.grid.appendChild(makeAlbumCard(album)));
+        albums.forEach((album) =>
+          rowAlbums.grid.appendChild(makeAlbumCard(album)),
+        );
         home.appendChild(rowAlbums.section);
+      }
+    });
+    const topGenres = getTopGenres();
+    const knownArtists = new Set(topArtists);
+        const genreFetches = topGenres.map((genre) =>
+      fetchJSON(`${API_BASE}/search?term=${encodeURIComponent(genre)}&entity=song&limit=20`)
+    );
+
+    const genreResults = await Promise.all(genreFetches);
+
+    topGenres.forEach((genre, i) => {
+      const songs = genreResults[i].results
+        .map((raw) => new Track(raw))
+        .filter((t) => !knownArtists.has(t.artist));
+
+      if (songs.length > 0) {
+        const rowDiscover = makeRow(`Scopri altro ${genre}`);
+        rowDiscover.grid.replaceChildren(...songs.map(makeCard));
+        home.appendChild(rowDiscover.section);
       }
     });
 
@@ -222,15 +270,21 @@ const loadHome = async () => {
     ]);
 
     const rowPop = makeRow("Suggerimenti pop");
-    rowPop.grid.replaceChildren(...pop.results.map((r) => new Track(r)).map(makeCard));
+    rowPop.grid.replaceChildren(
+      ...pop.results.map((r) => new Track(r)).map(makeCard),
+    );
     home.appendChild(rowPop.section);
 
     const rowRock = makeRow("Suggerimenti rock");
-    rowRock.grid.replaceChildren(...rock.results.map((r) => new Track(r)).map(makeCard));
+    rowRock.grid.replaceChildren(
+      ...rock.results.map((r) => new Track(r)).map(makeCard),
+    );
     home.appendChild(rowRock.section);
 
     const rowHits = makeRow("Suggerimenti hits");
-    rowHits.grid.replaceChildren(...hits.results.map((r) => new Track(r)).map(makeCard));
+    rowHits.grid.replaceChildren(
+      ...hits.results.map((r) => new Track(r)).map(makeCard),
+    );
     home.appendChild(rowHits.section);
   }
 };
@@ -244,7 +298,10 @@ const refreshAllHearts = () => {
   document.querySelectorAll(".card-fav").forEach((btn) => {
     const fav = isFavourite(Number(btn.dataset.trackId));
     btn.classList.toggle("is-fav", fav);
-    btn.style.opacity = ""; // ridai il controllo al CSS (hover/is-fav)
+    btn.style.opacity = "";
+    btn.innerHTML = fav
+      ? '<i class="bi bi-check-circle-fill"></i>'
+      : '<i class="bi bi-plus-circle"></i>';
   });
 };
 

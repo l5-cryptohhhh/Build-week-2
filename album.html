@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EpiTunes — Album</title>
+    <link rel="icon" href="assets/img/Nuovo_Logo.png" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="assets/css/app.css" />
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar"></aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div class="topbar-nav">
+            <button class="nav-btn" aria-label="Indietro">‹</button>
+            <button class="nav-btn" aria-label="Avanti">›</button>
+          </div>
+          <!-- nuovi pill per login -->
+          <div class="no-logged">
+            <button class="user-pill">Registrati</button>
+            <button class="user-pill">Accedi</button>
+          </div>
+
+          <!-- nuovi pill per loggato -->
+          <div class="logged-user">
+            <button class="user-pill">
+              <i class="bi bi-person-circle"></i>
+              <span class="user-pill-name">Nome utente</span>
+            </button>
+            <ul class="user-dropdown">
+              <li>Profilo</li>
+              <li>Esci</li>
+            </ul>
+          </div>
+        </header>
+
+        <!--
+          COSTRUISCI IN album.js:
+          - Leggi l'id dalla query string con URLSearchParams
+          - fetch lookup?id=NNN&entity=song
+          - Primo risultato = collection (album), gli altri = tracks
+          - Hero: cover grande + titolo album + artista + anno + numero brani
+          - Tracklist: lista numerata di brani con titolo + durata; click su brano -> Player
+        -->
+        <section class="album-page">
+          <div class="album-hero" id="album-hero"></div>
+          <div class="tracklist" id="tracklist"></div>
+        </section>
+      </main>
+
+      <footer class="player"></footer>
+    </div>
+    <div class="register-overlay" id="register-modal">
+      <div class="register-box">
+        <button class="register-close" type="button">X</button>
+        <h2>Crea un account</h2>
+        <form id="register-form">
+          <div class="register-field">
+            <label for="register-name">Nome</label>
+            <input type="text" id="register-name" name="name" />
+          </div>
+          <div class="register-field">
+            <label for="register-surname">Cognome</label>
+            <input type="text" id="register-surname" name="surname" />
+          </div>
+          <div class="register-field">
+            <label for="register-username">Nome utente</label>
+            <input
+              type="text"
+              id="register-username"
+              name="username"
+              required
+            />
+          </div>
+          <div class="register-field">
+            <label for="register-email">Email</label>
+            <input type="email" id="register-email" name="email" required />
+          </div>
+          <div class="register-field">
+            <label for="register-password">Password</label>
+            <input
+              type="password"
+              id="register-password"
+              name="password"
+              required
+            />
+          </div>
+          <button type="submit" class="register-submit">Crea account</button>
+        </form>
+      </div>
+    </div>
+    <div class="register-overlay" id="login-modal">
+      <div class="register-box">
+        <button class="register-close" type="button">X</button>
+        <h2>Accedi</h2>
+        <form id="login-form">
+          <div class="register-field">
+            <label for="login-username">Nome utente</label>
+            <input type="text" id="login-username" name="username" required />
+          </div>
+          <div class="register-field">
+            <label for="login-password">Password</label>
+            <input
+              type="password"
+              id="login-password"
+              name="password"
+              required
+            />
+          </div>
+          <button type="submit" class="register-submit">Accedi</button>
+        </form>
+      </div>
+    </div>
+
+    <audio id="audio-element"></audio>
+
+    <script src="assets/js/common.js"></script>
+    <script src="assets/js/album.js"></script>
+  </body>
+</html>

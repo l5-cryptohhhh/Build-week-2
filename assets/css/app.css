@@ -469,27 +469,35 @@ button {
   transform: translateY(0);
 }
 
+.card-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-width: 0;
+}
+.card-title-row .card-title {
+  flex: 1;
+  min-width: 0;
+}
 .card-fav {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.5);
-  color: #fff;
+  background: transparent;
   border: none;
-  font-size: 16px;
-  display: grid;
-  place-items: center;
+  color: var(--text-secondary);
+  font-size: 18px;
+  flex-shrink: 0;
+  padding: 2px 4px;
   opacity: 0;
-  transition: opacity 0.2s;
+  transition:
+    opacity 0.2s,
+    color 0.2s;
 }
 .card:hover .card-fav {
   opacity: 1;
 }
 .card-fav.is-fav {
-  color: var(--danger);
+  color: var(--success);
+  opacity: 1;
 }
 
 /* ============================ Hero album / artista ============================= */
@@ -554,6 +562,11 @@ button {
   color: #000;
   border: none;
   font-size: 24px;
+  display: grid;
+  place-items: center;
+  line-height: 1;
+  padding: 0;
+  padding-left: 3px; /* offset ottico del ▶, centrato come nelle card */
 }
 .btn-fav-big {
   width: 36px;
@@ -599,6 +612,20 @@ button {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.track-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.track-cover {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  flex-shrink: 0;
 }
 .track-time {
   color: var(--text-secondary);
@@ -877,23 +904,108 @@ button {
   }
 }
 
-@media (max-width: 540px) {
+/* Mobile nav: nascosta di default, visibile solo su ≤576px */
+.mobile-nav {
+  display: none;
+}
+
+@media (max-width: 576px) {
   .app {
     grid-template-columns: 0 1fr;
+    grid-template-rows: 1fr 90px 56px;
+    grid-template-areas:
+      "sidebar main"
+      "player  player"
+      "mobile-nav mobile-nav";
+    /* 100dvh = altezza viewport REALE su mobile (esclude barre browser):
+       evita che la mobile-nav finisca fuori schermo / coperta */
+    height: 100dvh;
   }
   .sidebar {
     display: none;
   }
   .player {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr auto;
     gap: 8px;
+    position: relative;
   }
   .player-right {
     display: none;
   }
+  .player-center {
+    flex-direction: row;
+    gap: 0;
+  }
+  #btn-shuffle,
+  #btn-prev,
+  #btn-next,
+  #btn-repeat {
+    display: none;
+  }
+  .btn-play {
+    background: transparent;
+    color: var(--text-primary);
+    font-size: 26px;
+    width: 40px;
+    height: 40px;
+  }
+  .player-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: 100%;
+    padding: 0;
+    gap: 0;
+  }
+  #time-current,
+  #time-total {
+    display: none;
+  }
+  #progress-slider {
+    width: 100%;
+    height: 3px;
+    border-radius: 0;
+  }
   .grid > .card {
     flex-basis: 140px;
     width: 140px;
+  }
+  .row-arrows {
+    display: none !important;
+  }
+  .card-fav {
+    opacity: 1;
+  }
+
+  /* Barra di navigazione mobile */
+  .mobile-nav {
+    display: flex;
+    grid-area: mobile-nav;
+    background: var(--bg-sidebar);
+    border-top: 1px solid var(--border);
+    justify-content: space-around;
+    align-items: center;
+  }
+  .mobile-nav a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 6px 24px;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+  }
+  .mobile-nav a .ico {
+    font-size: 22px;
+  }
+  .mobile-nav a.active,
+  .mobile-nav a:hover {
+    color: var(--text-primary);
   }
 }
 
@@ -1132,7 +1244,40 @@ button {
   border-radius: 3px;
 }
 
-@media (max-width: 540px) {
+/* Controlli player dentro il pannello "In riproduzione" — solo mobile */
+.np-player-controls {
+  display: none;
+}
+
+@media (max-width: 576px) {
+  .np-player-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    padding: 8px 0;
+  }
+  .np-player-controls .player-controls {
+    gap: 24px;
+  }
+  .np-player-controls .btn-play {
+    background: #fff;
+    color: #000;
+    width: 52px;
+    height: 52px;
+    font-size: 20px;
+  }
+  .np-player-controls .player-progress {
+    position: static;
+    width: 100%;
+    max-width: 100%;
+    gap: 8px;
+    padding: 0 16px;
+  }
+}
+
+@media (max-width: 576px) {
   .now-playing {
     bottom: 0;
     width: 100vw;

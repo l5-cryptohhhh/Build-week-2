@@ -39,16 +39,14 @@ const loadArtist = async () => {
     }
 
     /* Fetch dei dati dall'API passo 4 */
-    const response = await fetch(
-      `https://itunes.apple.com/lookup?id=${artistId}&entity=song&limit=15`,
-    );
+    const [songData, albumData] = await Promise.all([
+      fetchJSON(`${API_BASE}/lookup?id=${artistId}&entity=song&limit=15`),
+      fetchJSON(`${API_BASE}/lookup?id=${artistId}&entity=album&limit=12`),
+    ]);
 
-    if (!response.ok) {
-      throw new Error("Errore nel recupero dati");
-    }
-
-    const data = await response.json();
+    const data = songData;
     const results = data.results;
+    const albumResults = albumData.results.filter(r => r.wrapperType === "collection");
 
     if (!results || results.length === 0) {
       const errorTitle = document.createElement("h2");
@@ -77,7 +75,7 @@ const loadArtist = async () => {
     if (tracks.length > 0 && tracks[0].artworkUrl100) {
       img.src = bigArt(tracks[0].artworkUrl100);
     } else {
-      img.src = "assets/artist-default.jpeg";
+      img.src = "assets/img/artist-default.jpeg";
       img.classList.add("artist-default-img");
     }
     coverWrap.appendChild(img);
@@ -109,7 +107,7 @@ const loadArtist = async () => {
 
       const btnPlayBig = document.createElement("button");
       btnPlayBig.classList.add("btn-play-big");
-      btnPlayBig.textContent = "▶";
+      btnPlayBig.textContent = ICON_PLAY;
 
       const audioEl = document.querySelector("#audio-element");
 
@@ -118,7 +116,7 @@ const loadArtist = async () => {
           (t) => t.id === player.currentTrack?.id,
         );
         btnPlayBig.textContent =
-          isThisArtist && !audioEl.paused ? "⏸" : "▶";
+          isThisArtist && !audioEl.paused ? ICON_PAUSE : ICON_PLAY;
       };
 
       btnPlayBig.addEventListener("click", () => {
@@ -155,10 +153,21 @@ const loadArtist = async () => {
       trackNum.classList.add("track-num");
       trackNum.textContent = index + 1;
 
-      // Titolo traccia
+      // Cover + titolo traccia
+      const trackTitleWrap = document.createElement("div");
+      trackTitleWrap.classList.add("track-title-wrap");
+
+      const trackCover = document.createElement("img");
+      trackCover.classList.add("track-cover");
+      trackCover.src = track.artworkUrl100 || "";
+      trackCover.alt = "";
+
       const trackTitle = document.createElement("span");
       trackTitle.classList.add("track-title");
       trackTitle.textContent = track.trackName;
+
+      trackTitleWrap.appendChild(trackCover);
+      trackTitleWrap.appendChild(trackTitle);
 
       // Durata approssimativa o fissa (visto che trackTimeMillis potrebbe non esserci sempre)
       const trackTime = document.createElement("span");
@@ -191,7 +200,7 @@ const loadArtist = async () => {
       });
 
       trackRow.appendChild(trackNum);
-      trackRow.appendChild(trackTitle);
+      trackRow.appendChild(trackTitleWrap);
       trackRow.appendChild(trackTime);
       trackRow.appendChild(btnFav);
 
@@ -207,6 +216,53 @@ const loadArtist = async () => {
 
       topTracks.appendChild(trackRow);
     });
+    if (albumResults.length > 0) {
+      const albumSection = document.createElement("section");
+      albumSection.classList.add("row");
+
+      const h2 = document.createElement("h2");
+      h2.textContent = "Discografia";
+      albumSection.appendChild(h2);
+
+      const grid = document.createElement("div");
+      grid.classList.add("grid");
+
+      albumResults.forEach((raw) => {
+        const album = new Album(raw);
+
+        const card = document.createElement("div");
+        card.classList.add("card");
+
+        const imgWrap = document.createElement("div");
+        imgWrap.classList.add("card-image-wrap");
+        const img = document.createElement("img");
+        img.src = album.cover;
+        img.alt = album.title;
+        imgWrap.appendChild(img);
+
+        const pTitle = document.createElement("p");
+        pTitle.classList.add("card-title");
+        pTitle.textContent = album.title;
+
+        const pYear = document.createElement("p");
+        pYear.classList.add("card-sub");
+        pYear.textContent = new Date(album.releaseDate).getFullYear();
+
+        card.appendChild(imgWrap);
+        card.appendChild(pTitle);
+        card.appendChild(pYear);
+
+        card.addEventListener("click", () => {
+          window.location.href = `album.html?id=${album.id}`;
+        });
+
+        grid.appendChild(card);
+      });
+
+      albumSection.appendChild(grid);
+      document.querySelector(".artist-page").appendChild(albumSection);
+    }
+
   } catch (error) {
     console.error(error);
     artistHero.textContent = "";

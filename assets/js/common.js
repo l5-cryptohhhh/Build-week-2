@@ -59,6 +59,10 @@
 /* ============================ 1. Costanti ============================ */
 
 const API_BASE = "https://itunes.apple.com";
+// Play/pausa: glifo + variation selector U+FE0E -> forza la resa "testo"
+// invece dell'emoji colorata che i telefoni mostrano di default.
+const ICON_PLAY = "▶︎"; // ▶
+const ICON_PAUSE = "⏸︎"; // ⏸
 const STORAGE_KEY_HISTORY = "epitunes_history";
 const STORAGE_KEY_FAVOURITES = "epitunes_favourites";
 const STORAGE_KEY_LAST_SEARCH = "epitunes_last_search";
@@ -148,6 +152,7 @@ class Track {
     this.cover = raw.artworkUrl100;
     this.previewUrl = raw.previewUrl;
     this.durationMs = raw.trackTimeMillis;
+    this.genre = raw.primaryGenreName;
 
     // TODO: assegna alle property di this i valori da raw
     // (id, title, artist, album, albumId, artistId, cover, previewUrl, durationMs)
@@ -270,7 +275,7 @@ class Player {
         <div class="player-controls">
           <button class="btn-ctrl" id="btn-shuffle" aria-label="Shuffle"><i class="bi bi-shuffle"></i></button>
           <button class="btn-ctrl" id="btn-prev"    aria-label="Precedente">⏮</button>
-          <button class="btn-play" id="btn-toggle"  aria-label="Play/Pausa">▶</button>
+          <button class="btn-play" id="btn-toggle"  aria-label="Play/Pausa">${ICON_PLAY}</button>
           <button class="btn-ctrl" id="btn-next"    aria-label="Successivo">⏭</button>
           <button class="btn-ctrl" id="btn-repeat"  aria-label="Ripeti"><i class="bi bi-repeat"></i></button>
         </div>
@@ -362,7 +367,7 @@ class Player {
         if (this._wasPlaying) {
           this.audio.play().catch(() => {});
           this.isPlaying = true;
-          if (this.elBtnToggle) this.elBtnToggle.textContent = "⏸";
+          if (this.elBtnToggle) this.elBtnToggle.textContent = ICON_PAUSE;
         }
       });
     }
@@ -390,6 +395,44 @@ class Player {
     // --
 
     this.setVolume(0.3);
+
+    // Swipe sul player footer: sinistra = avanti, destra = indietro
+    let playerSwipeStartX = 0;
+    footer.addEventListener("touchstart", (e) => {
+      playerSwipeStartX = e.touches[0].clientX;
+    }, { passive: true });
+    footer.addEventListener("touchend", (e) => {
+      const deltaX = e.changedTouches[0].clientX - playerSwipeStartX;
+      if (Math.abs(deltaX) < 60) return;
+      // è stato uno swipe: impedisci che il click successivo apra il pannello
+      this._justSwiped = true;
+      setTimeout(() => { this._justSwiped = false; }, 350);
+      if (deltaX < 0) this.playNext();
+      else this.playPrev();
+    }, { passive: true });
+
+    // Swipe su mobile: sinistra = traccia avanti, destra = traccia indietro
+    const mainEl = document.querySelector(".main");
+    if (mainEl) {
+      let swipeStartX = 0;
+      let swipeStartY = 0;
+      mainEl.addEventListener("touchstart", (e) => {
+        swipeStartX = e.touches[0].clientX;
+        swipeStartY = e.touches[0].clientY;
+      }, { passive: true });
+      mainEl.addEventListener("touchend", (e) => {
+        const deltaX = e.changedTouches[0].clientX - swipeStartX;
+        const deltaY = e.changedTouches[0].clientY - swipeStartY;
+        // ignora se il gesto è più verticale che orizzontale
+        if (Math.abs(deltaY) > Math.abs(deltaX)) return;
+        // ignora swipe troppo corti
+        if (Math.abs(deltaX) < 60) return;
+        // ignora se il touch è su un carousel orizzontale
+        if (e.target.closest(".grid")) return;
+        if (deltaX < 0) this.playNext();
+        else this.playPrev();
+      }, { passive: true });
+    }
   }
 
   async play(track, auto = false) {
@@ -419,7 +462,7 @@ class Player {
     if (this.elTimeTotal)
       this.elTimeTotal.textContent = formatTime(track.durationMs);
     if (this.elBtnToggle)
-      this.elBtnToggle.textContent = this.isPlaying ? "⏸" : "▶";
+      this.elBtnToggle.textContent = this.isPlaying ? ICON_PAUSE : ICON_PLAY;
 
     // 5) salva in cronologia
     addToHistory(track);
@@ -444,7 +487,7 @@ class Player {
     // click utente -> apri; auto-advance -> aggiorna solo se già aperto
     if (window.nowPlaying) {
       if (auto) window.nowPlaying.render(this.currentTrack);
-      else window.nowPlaying.show(this.currentTrack);
+      else if (window.innerWidth > 576) window.nowPlaying.show(this.currentTrack);
     }
   }
 
@@ -461,7 +504,7 @@ class Player {
       this.isPlaying = false;
     }
     if (this.elBtnToggle)
-      this.elBtnToggle.textContent = this.isPlaying ? "⏸" : "▶";
+      this.elBtnToggle.textContent = this.isPlaying ? ICON_PAUSE : ICON_PLAY;
     // TODO: alterna play/pause + aggiorna icona del button
   }
 
@@ -695,7 +738,7 @@ const renderSidebar = (activePage) => {
   if (!sidebar) return;
   sidebar.innerHTML = `
     <a href="index.html" class="brand">
-      <img src="assets/Nuovo_Logo.png" alt="EpiTunes Logo" class="brand-logo" />
+      <img src="assets/img/Nuovo_Logo.png" alt="EpiTunes Logo" class="brand-logo" />
       <span class="brand-text">usiCode</span>
     </a>
     <nav class="sidebar-nav">
@@ -871,6 +914,117 @@ const createNowPlayingPanel = () => {
   coverImg.alt = "";
   coverWrap.appendChild(coverImg);
 
+  // --- Controlli player mobile (visibili solo su ≤576px via CSS) ---
+  const npControls = document.createElement("div");
+  npControls.classList.add("np-player-controls");
+
+  const npProgress = document.createElement("div");
+  npProgress.classList.add("player-progress");
+
+  const npTimeCurrent = document.createElement("span");
+  setText(npTimeCurrent, "0:00");
+  const npSlider = document.createElement("input");
+  npSlider.type = "range";
+  npSlider.className = "progress-slider";
+  npSlider.min = "0";
+  npSlider.max = "100";
+  npSlider.step = "0.1";
+  npSlider.value = "0";
+  npSlider.setAttribute("aria-label", "Avanzamento brano");
+  const npTimeTotal = document.createElement("span");
+  setText(npTimeTotal, "0:00");
+
+  npProgress.appendChild(npTimeCurrent);
+  npProgress.appendChild(npSlider);
+  npProgress.appendChild(npTimeTotal);
+
+  const npCtrlRow = document.createElement("div");
+  npCtrlRow.classList.add("player-controls");
+
+  const npBtnShuffle = document.createElement("button");
+  npBtnShuffle.className = "btn-ctrl";
+  npBtnShuffle.setAttribute("aria-label", "Shuffle");
+  npBtnShuffle.innerHTML = '<i class="bi bi-shuffle"></i>';
+
+  const npBtnPrev = document.createElement("button");
+  npBtnPrev.className = "btn-ctrl";
+  npBtnPrev.setAttribute("aria-label", "Precedente");
+  npBtnPrev.textContent = "⏮";
+
+  const npBtnToggle = document.createElement("button");
+  npBtnToggle.className = "btn-play";
+  npBtnToggle.setAttribute("aria-label", "Play/Pausa");
+  npBtnToggle.textContent = ICON_PLAY;
+
+  const npBtnNext = document.createElement("button");
+  npBtnNext.className = "btn-ctrl";
+  npBtnNext.setAttribute("aria-label", "Successivo");
+  npBtnNext.textContent = "⏭";
+
+  const npBtnRepeat = document.createElement("button");
+  npBtnRepeat.className = "btn-ctrl";
+  npBtnRepeat.setAttribute("aria-label", "Ripeti");
+  npBtnRepeat.innerHTML = '<i class="bi bi-repeat"></i>';
+
+  npCtrlRow.append(npBtnShuffle, npBtnPrev, npBtnToggle, npBtnNext, npBtnRepeat);
+  npControls.appendChild(npCtrlRow);
+  npControls.appendChild(npProgress);
+
+  // Wiring: usa window.player (già impostato da initPage prima di questa chiamata)
+  const p = window.player;
+  const npAudio = p.audio;
+
+  const syncNpPlay = () => {
+    npBtnToggle.textContent = npAudio.paused ? ICON_PLAY : ICON_PAUSE;
+  };
+
+  npAudio.addEventListener("timeupdate", () => {
+    if (!npAudio.duration || p._isSeeking) return;
+    const pct = (npAudio.currentTime / npAudio.duration) * 100;
+    npSlider.value = pct;
+    npSlider.style.setProperty("--percent", `${pct}%`);
+    setText(npTimeCurrent, formatTime(npAudio.currentTime * 1000));
+  });
+  npAudio.addEventListener("play", syncNpPlay);
+  npAudio.addEventListener("pause", syncNpPlay);
+  npAudio.addEventListener("ended", syncNpPlay);
+
+  npBtnToggle.addEventListener("click", () => p.togglePlay());
+  npBtnPrev.addEventListener("click", () => p.playPrev());
+  npBtnNext.addEventListener("click", () => p.playNext());
+
+  npBtnShuffle.addEventListener("click", () => {
+    p.isShuffling = !p.isShuffling;
+    npBtnShuffle.classList.toggle("btn-active", p.isShuffling);
+    const f = document.querySelector("#btn-shuffle");
+    if (f) f.classList.toggle("btn-active", p.isShuffling);
+  });
+
+  npBtnRepeat.addEventListener("click", () => {
+    p.isRepeating = !p.isRepeating;
+    npBtnRepeat.classList.toggle("btn-active", p.isRepeating);
+    const f = document.querySelector("#btn-repeat");
+    if (f) f.classList.toggle("btn-active", p.isRepeating);
+  });
+
+  npSlider.addEventListener("pointerdown", () => {
+    p._isSeeking = true;
+    p._wasPlaying = !npAudio.paused;
+    npAudio.pause();
+  });
+  npSlider.addEventListener("input", (e) => {
+    npSlider.style.setProperty("--percent", `${e.target.value}%`);
+  });
+  npSlider.addEventListener("change", (e) => {
+    p._isSeeking = false;
+    p.seek(parseFloat(e.target.value) / 100);
+    if (p._wasPlaying) {
+      npAudio.play().catch(() => {});
+      p.isPlaying = true;
+      npBtnToggle.textContent = ICON_PAUSE;
+    }
+  });
+
   // --- Titolo + artista ---
   const title = document.createElement("h2");
   title.classList.add("np-title");
@@ -930,6 +1084,7 @@ const createNowPlayingPanel = () => {
 
   panel.appendChild(header);
   panel.appendChild(coverWrap);
+  panel.appendChild(npControls);
   panel.appendChild(title);
   panel.appendChild(artist);
   panel.appendChild(trackInfo);
@@ -992,7 +1147,7 @@ const createNowPlayingPanel = () => {
         aboutImg.src = info.photo;
         aboutImg.classList.remove("is-default");
       } else {
-        aboutImg.src = "assets/artist-default.jpeg";
+        aboutImg.src = "assets/img/artist-default.jpeg";
         aboutImg.classList.add("is-default");
       }
       const meta = [info.genre, info.formedYear].filter(Boolean).join(" · ");
@@ -1015,6 +1170,14 @@ const createNowPlayingPanel = () => {
     setText(headerTitle, track.artist || "In riproduzione");
     enrichItunes(track);
     enrichArtist(track);
+    // sync controlli mobile
+    setText(npTimeTotal, formatTime(track.durationMs));
+    setText(npTimeCurrent, "0:00");
+    npSlider.value = 0;
+    npSlider.style.setProperty("--percent", "0%");
+    syncNpPlay();
+    npBtnShuffle.classList.toggle("btn-active", p.isShuffling);
+    npBtnRepeat.classList.toggle("btn-active", p.isRepeating);
   };
 
   const open = () => panel.classList.add("is-open");
@@ -1232,6 +1395,25 @@ const initPage = (activePage) => {
     });
   });
 
+  // Click su tutto il player footer (solo mobile ≤576px) → apre il pannello
+  // Esclusi: barra di riproduzione, tasto play e controlli secondari
+  const playerFooter = document.querySelector(".player");
+  if (playerFooter) {
+    playerFooter.addEventListener("click", (e) => {
+      if (window.innerWidth > 576) return;
+      if (player._justSwiped) return; // appena fatto uno swipe -> non aprire il pannello
+      if (
+        e.target.closest(".player-progress") ||
+        e.target.closest(".btn-play") ||
+        e.target.closest(".btn-ctrl") ||
+        e.target.closest(".player-right")
+      ) return;
+      e.stopPropagation();
+      if (player.currentTrack) window.nowPlaying.render(player.currentTrack);
+      window.nowPlaying.toggle();
+    });
+  }
+
   // chiusura del pannello cliccando in un punto qualsiasi della pagina
   // che non sia il pannello stesso o gli elementi che lo aprono
   const nowPlayingPanel = document.querySelector("#now-playing");
@@ -1249,6 +1431,28 @@ const initPage = (activePage) => {
   const [btnBack, btnForward] = document.querySelectorAll(".nav-btn");
   if (btnBack) btnBack.addEventListener("click", () => history.back());
   if (btnForward) btnForward.addEventListener("click", () => history.forward());
+
+  // Barra di navigazione mobile (visibile solo su ≤576px via CSS)
+  const appEl = document.querySelector(".app");
+  if (appEl) {
+    const mobileNav = document.createElement("nav");
+    mobileNav.className = "mobile-nav";
+    mobileNav.innerHTML = `
+      <a href="index.html" ${activePage === "home" ? 'class="active"' : ""}>
+        <span class="ico"><i class="bi bi-house-door-fill"></i></span>
+        <span>Home</span>
+      </a>
+      <a href="search.html" ${activePage === "search" ? 'class="active"' : ""}>
+        <span class="ico"><i class="bi bi-search"></i></span>
+        <span>Cerca</span>
+      </a>
+      <a href="favourites.html" ${activePage === "favourites" ? 'class="active"' : ""}>
+        <span class="ico"><i class="bi bi-heart-fill"></i></span>
+        <span>Preferiti</span>
+      </a>
+    `;
+    appEl.appendChild(mobileNav);
+  }
 
   setupCarousels();
   pillDropdown();
