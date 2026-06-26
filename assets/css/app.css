@@ -904,6 +904,9 @@ button {
       "sidebar main"
       "player  player"
       "mobile-nav mobile-nav";
+    /* 100dvh = altezza viewport REALE su mobile (esclude barre browser):
+       evita che la mobile-nav finisca fuori schermo / coperta */
+    height: 100dvh;
   }
   .sidebar {
     display: none;
