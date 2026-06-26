@@ -1087,6 +1087,7 @@ const modal = () => {
 
   registrati.addEventListener("click", (e) => {
     e.stopPropagation();
+    document.getElementById("login-modal").classList.remove("open");
     overlayModal.classList.add("open");
   });
 
@@ -1135,6 +1136,7 @@ const loginModal = () => {
 
   accedi.addEventListener("click", (e) => {
     e.stopPropagation();
+    document.getElementById("register-modal").classList.remove("open");
     loginOverlay.classList.add("open");
   });
 
@@ -1169,6 +1171,40 @@ const loginModal = () => {
   - Chiamata da home.js / search.js / album.js / artist.js
   - Monta sidebar, monta player, restituisce il player per essere usato.
 */
+const initSidebarResize = () => {
+  const sidebar = document.querySelector(".sidebar");
+  const app = document.querySelector(".app");
+  if (!sidebar || !app) return;
+
+  const resizer = document.createElement("div");
+  resizer.className = "sidebar-resizer";
+  sidebar.appendChild(resizer);
+
+  let isResizing = false;
+
+  resizer.addEventListener("mousedown", () => {
+    isResizing = true;
+    resizer.classList.add("dragging");
+    document.body.style.cursor = "ew-resize";
+    document.body.style.userSelect = "none";
+  });
+
+  document.addEventListener("mousemove", (e) => {
+    if (!isResizing) return;
+    const newWidth = Math.min(Math.max(e.clientX, 60), 400);
+    app.style.gridTemplateColumns = `${newWidth}px 1fr`;
+    sidebar.classList.toggle("sidebar--collapsed", newWidth < 120);
+  });
+
+  document.addEventListener("mouseup", () => {
+    if (!isResizing) return;
+    isResizing = false;
+    resizer.classList.remove("dragging");
+    document.body.style.cursor = "";
+    document.body.style.userSelect = "";
+  });
+};
+
 const initPage = (activePage) => {
   renderSidebar(activePage);
   const player = new Player();
@@ -1214,6 +1250,7 @@ const initPage = (activePage) => {
   renderUserPill();
   modal();
   loginModal();
+  initSidebarResize();
 
   return player;
 };

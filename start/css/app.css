@@ -88,6 +88,35 @@ button {
   background: var(--bg-sidebar);
   padding: 24px 16px;
   overflow-y: auto;
+  position: relative;
+}
+
+.sidebar-resizer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 5px;
+  height: 100%;
+  cursor: ew-resize;
+  z-index: 10;
+  transition: background 0.15s;
+}
+
+.sidebar-resizer:hover,
+.sidebar-resizer.dragging {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.sidebar--collapsed .brand-text,
+.sidebar--collapsed .sidebar-section-title,
+.sidebar--collapsed .sidebar-list,
+.sidebar--collapsed .sidebar-nav a span:not(.ico) {
+  display: none;
+}
+
+.sidebar--collapsed .sidebar-nav a {
+  justify-content: center;
+  padding: 10px 0;
 }
 
 .main {
@@ -114,6 +143,8 @@ button {
   font-weight: 700;
   font-size: 18px;
   letter-spacing: 0.5px;
+  height: 20px;
+  margin-bottom: 30px;
 }
 .brand-mark {
   width: 28px;
@@ -871,7 +902,7 @@ button {
   position: fixed;
   inset: 0;
   display: none;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(0, 0, 0, 0.85);
 }
 
 .register-overlay.open {
@@ -885,64 +916,7 @@ button {
   width: 90%;
   max-width: 400px;
   max-height: 80vh;
-  background-color: black;
-  padding: 40px;
-  border: 2px solid #fd7803;
-  border-radius: 20px;
-  position: relative;
-  overflow: hidden;
-}
-
-.register-close {
-  position: absolute;
-  top: -5px;
-  right: -3px;
-  width: 2.5rem;
-  height: 2.5rem;
-  font-weight: 600;
-  font-size: 13px;
-  background-color: #fd7803;
-  border: 2px solid #fd7803;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.register-field {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 20px;
-}
-
-.register-submit {
-  background: rgba(0, 0, 0, 0.6);
-  padding: 6px 12px;
-  border-radius: 999px;
-  font-weight: 600;
-  font-size: 13px;
-  background-color: #fd7803;
-}
-/* ============================ Modale di registrazione ============================ */
-.register-overlay {
-  position: fixed;
-  inset: 0;
-  display: none;
-  background-color: rgba(0, 0, 0, 0.6);
-}
-
-.register-overlay.open {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.register-box {
-  width: 90%;
-  max-width: 400px;
-  max-height: 80vh;
-  background-color: black;
+  background-color: #2a2a2a;
   padding: 40px;
   border: 2px solid #fd7803;
   border-radius: 20px;
@@ -1173,6 +1147,7 @@ button {
   align-items: center;
   padding: 16px 8px 24px 8px;
   gap: 0;
+  
 }
 
 .brand-logo {
