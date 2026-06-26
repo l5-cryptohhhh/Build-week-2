@@ -15,27 +15,17 @@ Web app in stile Spotify realizzata durante la Build Week di Epicode. Permette d
 
 ## Funzionalità in dettaglio
 
-> Le immagini sotto sono dei placeholder: salva gli screenshot in `assets/img/screenshots/` con il nome indicato e verranno mostrati automaticamente qui.
-
 ### Home
 
 Caroselli scorrevoli con brani, album e artisti in evidenza, caricati dalle API esterne.
 
 ![Home](assets/img/screenshots/home.png)
 
-### Ricerca
+### Pagine dettaglio (Album)
 
-Ricerca live (digitando si filtrano subito i risultati) tra brani, album e artisti.
-
-![Ricerca](assets/img/screenshots/search.png)
-
-### Pagine dettaglio (Album / Artista / Brano)
-
-Visualizzazione della tracklist di un album, dei brani/album di un artista e del dettaglio di un singolo brano, ciascuna con il player integrato.
+Visualizzazione della tracklist di un album, con player integrato.
 
 ![Dettaglio album](assets/img/screenshots/album.png)
-![Dettaglio artista](assets/img/screenshots/artist.png)
-![Dettaglio brano](assets/img/screenshots/track.png)
 
 ### Login / Registrazione
 
@@ -44,29 +34,11 @@ Modale di accesso e registrazione, con account e sessione salvati in `localStora
 ![Login](assets/img/screenshots/login.png)
 ![Registrazione](assets/img/screenshots/register.png)
 
-### Preferiti
-
-Aggiunta/rimozione di un brano dai preferiti con aggiornamento in tempo reale, mantenuti separati per ogni account.
-
-![Preferiti](assets/img/screenshots/favourites.png)
-
-### Player audio
-
-Player persistente in fondo alla pagina con play/pause, traccia precedente/successiva, shuffle, repeat, barra di avanzamento e controllo del volume.
-
-![Player](assets/img/screenshots/player.png)
-
 ### Profilo
 
 Pagina utente con dati dell'account e riepilogo dei preferiti.
 
 ![Profilo](assets/img/screenshots/profile.png)
-
-### Layout responsive
-
-Versione mobile dedicata, con menu e player adattati agli schermi piccoli.
-
-![Versione mobile](assets/img/screenshots/mobile.png)
 
 ## Tecnologie
 
