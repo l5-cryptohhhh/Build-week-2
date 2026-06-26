@@ -956,6 +956,9 @@ button {
     flex-basis: 140px;
     width: 140px;
   }
+  .row-arrows {
+    display: none !important;
+  }
 
   /* Barra di navigazione mobile */
   .mobile-nav {
@@ -1220,6 +1223,39 @@ button {
 .np-about-bio::-webkit-scrollbar-thumb {
   background: var(--bg-base);
   border-radius: 3px;
+}
+
+/* Controlli player dentro il pannello "In riproduzione" — solo mobile */
+.np-player-controls {
+  display: none;
+}
+
+@media (max-width: 576px) {
+  .np-player-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    padding: 8px 0;
+  }
+  .np-player-controls .player-controls {
+    gap: 24px;
+  }
+  .np-player-controls .btn-play {
+    background: #fff;
+    color: #000;
+    width: 52px;
+    height: 52px;
+    font-size: 20px;
+  }
+  .np-player-controls .player-progress {
+    position: static;
+    width: 100%;
+    max-width: 100%;
+    gap: 8px;
+    padding: 0 16px;
+  }
 }
 
 @media (max-width: 576px) {

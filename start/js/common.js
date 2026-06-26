@@ -392,6 +392,18 @@ class Player {
 
     this.setVolume(0.3);
 
+    // Swipe sul player footer: sinistra = avanti, destra = indietro
+    let playerSwipeStartX = 0;
+    footer.addEventListener("touchstart", (e) => {
+      playerSwipeStartX = e.touches[0].clientX;
+    }, { passive: true });
+    footer.addEventListener("touchend", (e) => {
+      const deltaX = e.changedTouches[0].clientX - playerSwipeStartX;
+      if (Math.abs(deltaX) < 60) return;
+      if (deltaX < 0) this.playNext();
+      else this.playPrev();
+    }, { passive: true });
+
     // Swipe su mobile: sinistra = traccia avanti, destra = traccia indietro
     const mainEl = document.querySelector(".main");
     if (mainEl) {
@@ -468,7 +480,7 @@ class Player {
     // click utente -> apri; auto-advance -> aggiorna solo se già aperto
     if (window.nowPlaying) {
       if (auto) window.nowPlaying.render(this.currentTrack);
-      else window.nowPlaying.show(this.currentTrack);
+      else if (window.innerWidth > 576) window.nowPlaying.show(this.currentTrack);
     }
   }
 
@@ -894,6 +906,117 @@ const createNowPlayingPanel = () => {
   coverImg.alt = "";
   coverWrap.appendChild(coverImg);
 
+  // --- Controlli player mobile (visibili solo su ≤576px via CSS) ---
+  const npControls = document.createElement("div");
+  npControls.classList.add("np-player-controls");
+
+  const npProgress = document.createElement("div");
+  npProgress.classList.add("player-progress");
+
+  const npTimeCurrent = document.createElement("span");
+  setText(npTimeCurrent, "0:00");
+  const npSlider = document.createElement("input");
+  npSlider.type = "range";
+  npSlider.className = "progress-slider";
+  npSlider.min = "0";
+  npSlider.max = "100";
+  npSlider.step = "0.1";
+  npSlider.value = "0";
+  npSlider.setAttribute("aria-label", "Avanzamento brano");
+  const npTimeTotal = document.createElement("span");
+  setText(npTimeTotal, "0:00");
+
+  npProgress.appendChild(npTimeCurrent);
+  npProgress.appendChild(npSlider);
+  npProgress.appendChild(npTimeTotal);
+
+  const npCtrlRow = document.createElement("div");
+  npCtrlRow.classList.add("player-controls");
+
+  const npBtnShuffle = document.createElement("button");
+  npBtnShuffle.className = "btn-ctrl";
+  npBtnShuffle.setAttribute("aria-label", "Shuffle");
+  npBtnShuffle.innerHTML = '<i class="bi bi-shuffle"></i>';
+
+  const npBtnPrev = document.createElement("button");
+  npBtnPrev.className = "btn-ctrl";
+  npBtnPrev.setAttribute("aria-label", "Precedente");
+  npBtnPrev.textContent = "⏮";
+
+  const npBtnToggle = document.createElement("button");
+  npBtnToggle.className = "btn-play";
+  npBtnToggle.setAttribute("aria-label", "Play/Pausa");
+  npBtnToggle.textContent = "▶";
+
+  const npBtnNext = document.createElement("button");
+  npBtnNext.className = "btn-ctrl";
+  npBtnNext.setAttribute("aria-label", "Successivo");
+  npBtnNext.textContent = "⏭";
+
+  const npBtnRepeat = document.createElement("button");
+  npBtnRepeat.className = "btn-ctrl";
+  npBtnRepeat.setAttribute("aria-label", "Ripeti");
+  npBtnRepeat.innerHTML = '<i class="bi bi-repeat"></i>';
+
+  npCtrlRow.append(npBtnShuffle, npBtnPrev, npBtnToggle, npBtnNext, npBtnRepeat);
+  npControls.appendChild(npCtrlRow);
+  npControls.appendChild(npProgress);
+
+  // Wiring: usa window.player (già impostato da initPage prima di questa chiamata)
+  const p = window.player;
+  const npAudio = p.audio;
+
+  const syncNpPlay = () => {
+    npBtnToggle.textContent = npAudio.paused ? "▶" : "⏸";
+  };
+
+  npAudio.addEventListener("timeupdate", () => {
+    if (!npAudio.duration || p._isSeeking) return;
+    const pct = (npAudio.currentTime / npAudio.duration) * 100;
+    npSlider.value = pct;
+    npSlider.style.setProperty("--percent", `${pct}%`);
+    setText(npTimeCurrent, formatTime(npAudio.currentTime * 1000));
+  });
+  npAudio.addEventListener("play", syncNpPlay);
+  npAudio.addEventListener("pause", syncNpPlay);
+  npAudio.addEventListener("ended", syncNpPlay);
+
+  npBtnToggle.addEventListener("click", () => p.togglePlay());
+  npBtnPrev.addEventListener("click", () => p.playPrev());
+  npBtnNext.addEventListener("click", () => p.playNext());
+
+  npBtnShuffle.addEventListener("click", () => {
+    p.isShuffling = !p.isShuffling;
+    npBtnShuffle.classList.toggle("btn-active", p.isShuffling);
+    const f = document.querySelector("#btn-shuffle");
+    if (f) f.classList.toggle("btn-active", p.isShuffling);
+  });
+
+  npBtnRepeat.addEventListener("click", () => {
+    p.isRepeating = !p.isRepeating;
+    npBtnRepeat.classList.toggle("btn-active", p.isRepeating);
+    const f = document.querySelector("#btn-repeat");
+    if (f) f.classList.toggle("btn-active", p.isRepeating);
+  });
+
+  npSlider.addEventListener("pointerdown", () => {
+    p._isSeeking = true;
+    p._wasPlaying = !npAudio.paused;
+    npAudio.pause();
+  });
+  npSlider.addEventListener("input", (e) => {
+    npSlider.style.setProperty("--percent", `${e.target.value}%`);
+  });
+  npSlider.addEventListener("change", (e) => {
+    p._isSeeking = false;
+    p.seek(parseFloat(e.target.value) / 100);
+    if (p._wasPlaying) {
+      npAudio.play().catch(() => {});
+      p.isPlaying = true;
+      npBtnToggle.textContent = "⏸";
+    }
+  });
+
   // --- Titolo + artista ---
   const title = document.createElement("h2");
   title.classList.add("np-title");
@@ -953,6 +1076,7 @@ const createNowPlayingPanel = () => {
 
   panel.appendChild(header);
   panel.appendChild(coverWrap);
+  panel.appendChild(npControls);
   panel.appendChild(title);
   panel.appendChild(artist);
   panel.appendChild(trackInfo);
@@ -1038,6 +1162,14 @@ const createNowPlayingPanel = () => {
     setText(headerTitle, track.artist || "In riproduzione");
     enrichItunes(track);
     enrichArtist(track);
+    // sync controlli mobile
+    setText(npTimeTotal, formatTime(track.durationMs));
+    setText(npTimeCurrent, "0:00");
+    npSlider.value = 0;
+    npSlider.style.setProperty("--percent", "0%");
+    syncNpPlay();
+    npBtnShuffle.classList.toggle("btn-active", p.isShuffling);
+    npBtnRepeat.classList.toggle("btn-active", p.isRepeating);
   };
 
   const open = () => panel.classList.add("is-open");
