@@ -75,7 +75,7 @@ const loadArtist = async () => {
     if (tracks.length > 0 && tracks[0].artworkUrl100) {
       img.src = bigArt(tracks[0].artworkUrl100);
     } else {
-      img.src = "assets/artist-default.jpeg";
+      img.src = "assets/img/artist-default.jpeg";
       img.classList.add("artist-default-img");
     }
     coverWrap.appendChild(img);

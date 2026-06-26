@@ -730,7 +730,7 @@ const renderSidebar = (activePage) => {
   if (!sidebar) return;
   sidebar.innerHTML = `
     <a href="index.html" class="brand">
-      <img src="assets/Nuovo_Logo.png" alt="EpiTunes Logo" class="brand-logo" />
+      <img src="assets/img/Nuovo_Logo.png" alt="EpiTunes Logo" class="brand-logo" />
       <span class="brand-text">usiCode</span>
     </a>
     <nav class="sidebar-nav">
@@ -1139,7 +1139,7 @@ const createNowPlayingPanel = () => {
         aboutImg.src = info.photo;
         aboutImg.classList.remove("is-default");
       } else {
-        aboutImg.src = "assets/artist-default.jpeg";
+        aboutImg.src = "assets/img/artist-default.jpeg";
         aboutImg.classList.add("is-default");
       }
       const meta = [info.genre, info.formedYear].filter(Boolean).join(" · ");
