@@ -44,6 +44,8 @@ if (account === null) {
 
     const favsContainer = document.getElementById("profile-favs");
 
+    favsContainer.replaceChildren();
+
     preferitiRandom.forEach((track, index) => {
       // creazione elementi preferiti
       const trackRow = document.createElement("div");
@@ -101,7 +103,7 @@ if (account === null) {
 
       trackFav.addEventListener("click", (e) => {
         toggleFavourite(track);
-        trackRow.remove();
+        renderFavs();
       });
 
       trackRow.appendChild(trackFav);
