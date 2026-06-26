@@ -32,7 +32,7 @@ const gridAlbums = document.querySelector("#grid-albums");
 const gridArtists = document.querySelector("#grid-artists");
 
 // Si aspetta un'istanza di Track con: id, title, artist, cover, previewUrl (contratto definito in common.js)
-const renderTrackCard = (track) => {
+const renderTrackCard = (track, index, tracks) => {
   const cardDiv = document.createElement("div");
   cardDiv.classList.add("card");
 
@@ -68,7 +68,14 @@ const renderTrackCard = (track) => {
 
   cardPlay.addEventListener("click", (e) => {
     e.stopPropagation();
-    player.play(track);
+    if (player.currentTrack && player.currentTrack.id === track.id) {
+      player.togglePlay();
+      cardPlay.textContent = player.isPlaying ? ICON_PAUSE : ICON_PLAY;
+    } else {
+      document.querySelectorAll(".card-play").forEach((btn) => (btn.textContent = ICON_PLAY));
+      player.setQueue(tracks, index);
+      cardPlay.textContent = ICON_PAUSE;
+    }
   });
 
   cardDiv.appendChild(imageWrap);
@@ -220,8 +227,8 @@ const doSearch = async (term) => {
 
     // Per ogni modello creiamo la card (render*Card ritorna un <div>, non lo inserisce
     // da sola nella pagina) e la attacchiamo alla grid con appendChild.
-    newTrack.forEach((track) => {
-      gridTracks.appendChild(renderTrackCard(track));
+    newTrack.forEach((track, index) => {
+      gridTracks.appendChild(renderTrackCard(track, index, newTrack));
     });
 
     newAlbum.forEach((album) => {
